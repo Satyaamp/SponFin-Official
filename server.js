@@ -110,6 +110,11 @@ app.get('/admin/*', (req, res) => {
   res.redirect('/admin');
 });
 
+
+app.get('/googleea88924641ff227b.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'googleea88924641ff227b.html'));
+});
+
 // Global Error Handler
 app.use(errorHandler);
 
