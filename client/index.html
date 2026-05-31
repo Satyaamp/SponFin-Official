@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{SEO_TITLE}}</title>
+  <meta name="description" content="{{SEO_DESCRIPTION}}">
+
+  <!-- Open Graph Tags -->
+  <meta property="og:title" content="{{OG_TITLE}}">
+  <meta property="og:description" content="{{OG_DESCRIPTION}}">
+  <meta property="og:image" content="{{OG_IMAGE}}">
+  <meta property="og:url" content="{{OG_URL}}">
+  <meta property="og:type" content="{{OG_TYPE}}">
+  <meta property="og:site_name" content="{{COMPANY_NAME}}">
+
+  <!-- Canonical and Favicon -->
+  <link rel="canonical" href="{{CANONICAL_URL}}">
+  <link rel="shortcut icon" href="/assets/logo.png" type="image/png">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+
+  <!-- Background Glowing Circles -->
+  <div class="blur-circle circle-1"></div>
+  <div class="blur-circle circle-2"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="container nav-container">
+      <a href="/" class="logo">
+        <img src="/assets/logo.png" alt="SponFin Logo">
+        <span>{{COMPANY_NAME}}</span>
+      </a>
+      <button class="mobile-toggle" aria-label="Toggle menu">&#9776;</button>
+      <nav>
+        <ul>
+          <li><a href="/" class="active">Home</a></li>
+          <li><a href="/about">About</a></li>
+          <li><a href="/services">Services</a></li>
+          <li><a href="/portfolio">Portfolio</a></li>
+          <li><a href="/blog">Blog</a></li>
+          <li><a href="/contact" class="btn-contact-nav">Contact Us</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-content">
+        <h1 id="hero-title">Empower Your Brand with Financial Growth</h1>
+        <p id="hero-subtitle">We bridge the gap between corporate brands and high-performing sponsorships using detailed
+          audience analytics and web integrations.</p>
+        <div class="hero-actions">
+          <a href="#contact" class="btn-primary" id="hero-btn">Get Started</a>
+          <a href="/portfolio" class="btn-secondary">View Showcase</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-image-wrapper">
+          <img src="" alt="SponFin Visual" id="hero-img">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services Preview Section -->
+  <section class="section" id="services">
+    <div class="container">
+      <div class="section-header">
+        <h2>Expert Services</h2>
+        <p>Bespoke consultancy and platforms designed for premium financial matching.</p>
+      </div>
+      <div class="services-grid" id="services-grid">
+        <!-- Rendered Dynamically -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Portfolio Section -->
+  <section class="section" id="portfolio">
+    <div class="container">
+      <div class="section-header">
+        <h2>Featured Portfolio</h2>
+        <p>A handpicked selection of platforms, applications, and campaigns designed by SponFin.</p>
+      </div>
+      <div class="portfolio-grid" id="portfolio-grid">
+        <!-- Rendered Dynamically -->
+      </div>
+      <div style="text-align: center; margin-top: 40px;">
+        <a href="/portfolio" class="btn-secondary">View Full Portfolio</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Preview Section -->
+  <section class="section" id="about-preview">
+    <div class="container about-split">
+      <div class="hero-visual">
+        <div class="hero-image-wrapper">
+          <img src="" alt="About SponFin" id="about-preview-img">
+        </div>
+      </div>
+      <div class="about-content">
+        <h3 id="about-preview-title">About Our Strategy</h3>
+        <p id="about-preview-text">SponFin matches high-growth businesses with dynamic sponsors, deploying automated
+          validation mechanisms and real-time analytical reporting to maximize partnership value.</p>
+        <a href="/about" class="btn-primary">Learn More About Us</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Blog Preview Section -->
+  <section class="section" id="blog">
+    <div class="container">
+      <div class="section-header">
+        <h2>Latest Insights</h2>
+        <p>Read our perspective on business sponsorships, capital matching, and digital marketing trends.</p>
+      </div>
+      <div class="blog-grid" id="blog-grid">
+        <!-- Rendered Dynamically -->
+      </div>
+      <div style="text-align: center; margin-top: 40px;">
+        <a href="/blog" class="btn-secondary">Browse All Articles</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact CTA Section -->
+  <section class="section" id="cta">
+    <div class="container">
+      <div class="cta-box">
+        <h2>Start Matching Your Brand Value Today</h2>
+        <p>Consult with our team to customize sponsorship outreach and campaign analytics tailored to your industry.</p>
+        <a href="#contact" class="btn-primary">Connect with an Expert</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lead Submission Section -->
+  <section class="section" id="contact">
+    <div class="container contact-grid">
+      <div class="contact-info">
+        <h3>Talk to Us</h3>
+        <p style="color:var(--text-muted); margin-bottom: 30px;">Have questions about pricing, metrics, or custom
+          deployments? Submit the form and our analysts will reply within 24 hours.</p>
+
+        <div class="contact-info-list">
+          <div class="contact-info-item">
+            <span class="contact-info-icon">&#9993;</span>
+            <div class="contact-info-text">
+              <h4>Email Support</h4>
+              <p id="footer-email">support@sponfin.com</p>
+            </div>
+          </div>
+          <div class="contact-info-item">
+            <span class="contact-info-icon">&#9743;</span>
+            <div class="contact-info-text">
+              <h4>Direct Phone</h4>
+              <p id="footer-phone">+1 (555) 123-4567</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="contact-form-wrapper">
+        <h3>Contact Request</h3>
+        <form id="lead-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="lead-name">Name *</label>
+              <input type="text" id="lead-name" placeholder="Satyam Kumar" required>
+            </div>
+            <div class="form-group">
+              <label for="lead-email">Email *</label>
+              <input type="email" id="lead-email" placeholder="sponfinworks@gmail.com" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="lead-phone">Phone Number</label>
+              <input type="text" id="lead-phone" placeholder="7321805409">
+            </div>
+            <div class="form-group">
+              <label for="lead-company">Company</label>
+              <input type="text" id="lead-company" placeholder="Acme Corporation">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="lead-service">Interested Service</label>
+            <select id="lead-service">
+              <option value="Sponsorship Brokerage">Sponsorship Brokerage</option>
+              <option value="Audience Demographics Analytics">Audience Demographics Analytics</option>
+              <option value="Digital Campaign Activation">Digital Campaign Activation</option>
+              <option value="General Inquiry" selected>General Inquiry</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="lead-message">Message *</label>
+            <textarea id="lead-message" placeholder="Describe your sponsorship objectives..." required></textarea>
+          </div>
+
+          <button type="submit" class="btn-submit">Send Message</button>
+          <div id="form-message" class="form-message"></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-grid">
+      <div class="footer-col">
+        <a href="/" class="logo" style="margin-bottom: 20px;">
+          <img src="/assets/logo.png" alt="SponFin Logo">
+          <span>{{COMPANY_NAME}}</span>
+        </a>
+        <p id="footer-desc">Professional Sponsorship matching and performance marketing analytics.</p>
+        <div class="contact-socials" id="footer-socials">
+          <!-- Social Icons Rendered Dynamically -->
+        </div>
+      </div>
+      <div class="footer-col">
+        <h3>Site Links</h3>
+        <div class="footer-links">
+          <a href="/">Home</a>
+          <a href="/about">About Us</a>
+          <a href="/services">Services</a>
+          <a href="/portfolio">Portfolio</a>
+          <a href="/blog">Blog</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h3>Corporate Details</h3>
+        <p id="footer-address" style="margin-bottom:12px; font-size:0.9rem; color:var(--text-muted);"></p>
+        <a href="/admin/login" style="font-size:0.85rem; color:var(--text-dark); text-decoration: underline;">Backoffice
+          Login</a>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p>&copy; 2026 SponFin. All rights reserved.</p>
+      <p>Building Digital Success</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="/js/api.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+
+</html>

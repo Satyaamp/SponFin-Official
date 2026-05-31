@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{SEO_TITLE}}</title>
+  <meta name="description" content="{{SEO_DESCRIPTION}}">
+  <meta property="og:title" content="{{OG_TITLE}}">
+  <meta property="og:description" content="{{OG_DESCRIPTION}}">
+  <meta property="og:image" content="{{OG_IMAGE}}">
+  <meta property="og:url" content="{{OG_URL}}">
+  <meta property="og:type" content="{{OG_TYPE}}">
+  <link rel="canonical" href="{{CANONICAL_URL}}">
+  <link rel="shortcut icon" href="/assets/logo.png" type="image/png">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div class="blur-circle circle-1"></div>
+  <div class="blur-circle circle-2"></div>
+
+  <!-- Header -->
+  <header class="scrolled">
+    <div class="container nav-container">
+      <a href="/" class="logo">
+        <img src="/assets/logo.png" alt="SponFin Logo">
+        <span>{{COMPANY_NAME}}</span>
+      </a>
+      <button class="mobile-toggle" aria-label="Toggle menu">&#9776;</button>
+      <nav>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/about">About</a></li>
+          <li><a href="/services">Services</a></li>
+          <li><a href="/portfolio">Portfolio</a></li>
+          <li><a href="/blog">Blog</a></li>
+          <li><a href="/contact" class="active btn-contact-nav">Contact Us</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Page Content -->
+  <main style="padding-top: 120px; min-height: 80vh;">
+    <section class="section">
+      <div class="container contact-grid">
+        <div class="contact-info">
+          <h3>Talk to Us</h3>
+          <p style="color:var(--text-muted); margin-bottom: 30px;">Have questions about our data engines, brokerage commissions, or portfolio solutions? Get in touch with our team today.</p>
+          
+          <div class="contact-info-list">
+            <div class="contact-info-item">
+              <span class="contact-info-icon">&#9993;</span>
+              <div class="contact-info-text">
+                <h4>Email Support</h4>
+                <p id="footer-email">support@sponfin.com</p>
+              </div>
+            </div>
+            <div class="contact-info-item">
+              <span class="contact-info-icon">&#9743;</span>
+              <div class="contact-info-text">
+                <h4>Direct Phone</h4>
+                <p id="footer-phone">+1 (555) 123-4567</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="contact-form-wrapper">
+          <h3>Contact Request</h3>
+          <form id="lead-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="lead-name">Name *</label>
+                <input type="text" id="lead-name" placeholder="John Doe" required>
+              </div>
+              <div class="form-group">
+                <label for="lead-email">Email *</label>
+                <input type="email" id="lead-email" placeholder="john@example.com" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="lead-phone">Phone Number</label>
+                <input type="text" id="lead-phone" placeholder="+1 (555) 000-0000">
+              </div>
+              <div class="form-group">
+                <label for="lead-company">Company</label>
+                <input type="text" id="lead-company" placeholder="Acme Corp">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="lead-service">Interested Service</label>
+              <select id="lead-service">
+                <option value="Sponsorship Brokerage">Sponsorship Brokerage</option>
+                <option value="Audience Demographics Analytics">Audience Demographics Analytics</option>
+                <option value="Digital Campaign Activation">Digital Campaign Activation</option>
+                <option value="General Inquiry" selected>General Inquiry</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="lead-message">Message *</label>
+              <textarea id="lead-message" placeholder="Describe your objectives..." required></textarea>
+            </div>
+            
+            <button type="submit" class="btn-submit">Send Message</button>
+            <div id="form-message" class="form-message"></div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-grid">
+      <div class="footer-col">
+        <a href="/" class="logo" style="margin-bottom: 20px;">
+          <img src="/assets/logo.png" alt="SponFin Logo">
+          <span>{{COMPANY_NAME}}</span>
+        </a>
+        <p id="footer-desc">Professional Sponsorship matching and performance marketing analytics.</p>
+        <div class="contact-socials" id="footer-socials"></div>
+      </div>
+      <div class="footer-col">
+        <h3>Site Links</h3>
+        <div class="footer-links">
+          <a href="/">Home</a>
+          <a href="/about">About Us</a>
+          <a href="/services">Services</a>
+          <a href="/portfolio">Portfolio</a>
+          <a href="/blog">Blog</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h3>Corporate Details</h3>
+        <p id="footer-address" style="margin-bottom:12px; font-size:0.9rem; color:var(--text-muted);"></p>
+        <a href="/admin/login" style="font-size:0.85rem; color:var(--text-dark); text-decoration: underline;">Backoffice Login</a>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p>&copy; 2026 SponFin. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

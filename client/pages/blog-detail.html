@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{SEO_TITLE}}</title>
+  <meta name="description" content="{{SEO_DESCRIPTION}}">
+  <meta property="og:title" content="{{OG_TITLE}}">
+  <meta property="og:description" content="{{OG_DESCRIPTION}}">
+  <meta property="og:image" content="{{OG_IMAGE}}">
+  <meta property="og:url" content="{{OG_URL}}">
+  <meta property="og:type" content="{{OG_TYPE}}">
+  <link rel="canonical" href="{{CANONICAL_URL}}">
+  <link rel="shortcut icon" href="/assets/logo.png" type="image/png">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div class="blur-circle circle-1"></div>
+  <div class="blur-circle circle-2"></div>
+
+  <!-- Header -->
+  <header class="scrolled">
+    <div class="container nav-container">
+      <a href="/" class="logo">
+        <img src="/assets/logo.png" alt="SponFin Logo">
+        <span>{{COMPANY_NAME}}</span>
+      </a>
+      <button class="mobile-toggle" aria-label="Toggle menu">&#9776;</button>
+      <nav>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/about">About</a></li>
+          <li><a href="/services">Services</a></li>
+          <li><a href="/portfolio">Portfolio</a></li>
+          <li><a href="/blog" class="active">Blog</a></li>
+          <li><a href="/contact" class="btn-contact-nav">Contact Us</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Page Content -->
+  <main style="min-height: 80vh;">
+    <article class="blog-detail-container">
+      <div class="blog-detail-header">
+        <h1 class="blog-detail-title" id="blog-title">Article Title Loading...</h1>
+        <div class="blog-detail-meta">
+          <span id="blog-date">Date</span>
+          <span id="blog-author">By Author</span>
+        </div>
+        <div class="blog-detail-tags" id="blog-tags">
+          <!-- Tags Rendered Dynamically -->
+        </div>
+      </div>
+
+      <div class="blog-detail-img">
+        <img src="" alt="Featured Visual" id="blog-featured-image">
+      </div>
+
+      <div class="blog-detail-content" id="blog-content-body">
+        <!-- Rendered Dynamically -->
+      </div>
+      
+      <div style="margin-top: 60px; border-top: 1px solid var(--border-color); padding-top: 30px;">
+        <a href="/blog" style="color: var(--primary); font-weight:600;">&larr; Back to all insights</a>
+      </div>
+    </article>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-grid">
+      <div class="footer-col">
+        <a href="/" class="logo" style="margin-bottom: 20px;">
+          <img src="/assets/logo.png" alt="SponFin Logo">
+          <span>{{COMPANY_NAME}}</span>
+        </a>
+        <p id="footer-desc">Professional Sponsorship matching and performance marketing analytics.</p>
+        <div class="contact-socials" id="footer-socials"></div>
+      </div>
+      <div class="footer-col">
+        <h3>Site Links</h3>
+        <div class="footer-links">
+          <a href="/">Home</a>
+          <a href="/about">About Us</a>
+          <a href="/services">Services</a>
+          <a href="/portfolio">Portfolio</a>
+          <a href="/blog">Blog</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h3>Corporate Details</h3>
+        <p id="footer-address" style="margin-bottom:12px; font-size:0.9rem; color:var(--text-muted);"></p>
+        <a href="/admin/login" style="font-size:0.85rem; color:var(--text-dark); text-decoration: underline;">Backoffice Login</a>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <p>&copy; 2026 SponFin. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>
