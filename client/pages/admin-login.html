@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,13 +8,14 @@
   <link rel="shortcut icon" href="/assets/logo.png" type="image/png">
   <link rel="stylesheet" href="/css/admin.css">
 </head>
+
 <body class="admin-login-wrapper">
 
   <div class="login-card">
     <img src="/assets/logo.png" alt="SponFin Logo" class="logo">
     <h2>SponFin Backoffice</h2>
     <p>Sign in to manage dynamic content, leads, and website configurations.</p>
-    
+
     <div id="login-msg" class="login-message"></div>
 
     <form id="admin-login-form">
@@ -25,15 +27,31 @@
         <label for="login-password">Password</label>
         <input type="password" id="login-password" placeholder="••••••••" required>
       </div>
-      <button type="submit" class="btn-admin btn-admin-primary" style="width: 100%; justify-content: center; padding: 12px;">Login</button>
+      <button type="submit" class="btn-admin btn-admin-primary"
+        style="width: 100%; justify-content: center; padding: 12px;">Login</button>
     </form>
-    
+
     <div style="margin-top: 24px;">
-      <a href="/" style="font-size:12px; color:var(--text-muted); text-decoration: underline;">&larr; Back to public website</a>
+      <a href="/" style="font-size:12px; color:var(--text-muted); text-decoration: underline;">&larr; Back to public
+        website</a>
     </div>
   </div>
 
   <script src="/js/api.js"></script>
   <script src="/js/admin.js"></script>
+  <!--Start of Tawk.to Script-->
+  <script type="text/javascript">
+    var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
+    (function () {
+      var s1 = document.createElement("script"), s0 = document.getElementsByTagName("script")[0];
+      s1.async = true;
+      s1.src = 'https://embed.tawk.to/6a1bf04c1125ab1c31508019/1jpui5b6o';
+      s1.charset = 'UTF-8';
+      s1.setAttribute('crossorigin', '*');
+      s0.parentNode.insertBefore(s1, s0);
+    })();
+  </script>
+  <!--End of Tawk.to Script-->
 </body>
+
 </html>
