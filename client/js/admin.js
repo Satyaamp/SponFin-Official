@@ -126,6 +126,16 @@ async function initDashboardFlow() {
     }
   }
 
+  // Hide fwork sidebar item for non-super_admin levels
+  const fworkSidebarItem = document.getElementById('sidebar-item-fwork');
+  if (fworkSidebarItem) {
+    if (currentUser.role === 'super_admin') {
+      fworkSidebarItem.style.display = 'inline-flex';
+    } else {
+      fworkSidebarItem.style.display = 'none';
+    }
+  }
+
   // Setup logout listener
   const logoutBtn = document.getElementById('btn-logout');
   if (logoutBtn) {
@@ -144,6 +154,7 @@ async function initDashboardFlow() {
   menuItems.forEach(item => {
     item.addEventListener('click', () => {
       const targetTab = item.getAttribute('data-tab');
+      if (!targetTab) return;
 
       menuItems.forEach(m => m.classList.remove('active'));
       panels.forEach(p => p.classList.remove('active'));
@@ -171,14 +182,30 @@ async function initDashboardFlow() {
 
   if (mobileToggle && adminSidebar && sidebarOverlay) {
     mobileToggle.addEventListener('click', () => {
-      adminSidebar.classList.add('active');
-      sidebarOverlay.classList.add('active');
+      if (window.innerWidth <= 768) {
+        adminSidebar.classList.add('active');
+        sidebarOverlay.classList.add('active');
+      } else {
+        adminSidebar.classList.remove('collapsed');
+      }
     });
 
     sidebarOverlay.addEventListener('click', () => {
       adminSidebar.classList.remove('active');
       sidebarOverlay.classList.remove('active');
     });
+
+    const sidebarClose = document.getElementById('sidebar-close-btn');
+    if (sidebarClose) {
+      sidebarClose.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+          adminSidebar.classList.remove('active');
+          sidebarOverlay.classList.remove('active');
+        } else {
+          adminSidebar.classList.add('collapsed');
+        }
+      });
+    }
   }
 
   // Default: load dashboard stats
@@ -194,7 +221,7 @@ async function initDashboardFlow() {
 }
 
 async function triggerPanelLoad(tab) {
-  if (tab === 'logs' && currentUser && currentUser.role !== 'super_admin') {
+  if ((tab === 'logs' || tab === 'fwork') && currentUser && currentUser.role !== 'super_admin') {
     const dashboardMenuItem = document.querySelector('.sidebar-item[data-tab="dashboard"]');
     if (dashboardMenuItem) {
       dashboardMenuItem.click();
@@ -236,6 +263,15 @@ async function triggerPanelLoad(tab) {
         }
       }
 
+      const fworkSidebarItem = document.getElementById('sidebar-item-fwork');
+      if (fworkSidebarItem) {
+        if (currentUser.role === 'super_admin') {
+          fworkSidebarItem.style.display = 'inline-flex';
+        } else {
+          fworkSidebarItem.style.display = 'none';
+        }
+      }
+
       // If the role changed, reload views
       if (oldRole && oldRole !== currentUser.role) {
         if (currentUser.role === 'editor' && tab === 'leads') {
@@ -248,6 +284,14 @@ async function triggerPanelLoad(tab) {
         }
         if (currentUser.role !== 'super_admin' && tab === 'logs') {
           // Redirect them to dashboard since they no longer have access to logs
+          const dashboardMenuItem = document.querySelector('.sidebar-item[data-tab="dashboard"]');
+          if (dashboardMenuItem) {
+            dashboardMenuItem.click();
+            return;
+          }
+        }
+        if (currentUser.role !== 'super_admin' && tab === 'fwork') {
+          // Redirect them to dashboard since they no longer have access to fwork
           const dashboardMenuItem = document.querySelector('.sidebar-item[data-tab="dashboard"]');
           if (dashboardMenuItem) {
             dashboardMenuItem.click();
@@ -287,6 +331,9 @@ async function triggerPanelLoad(tab) {
       break;
     case 'logs':
       loadLogsManager();
+      break;
+    case 'fwork':
+      loadFworkManager();
       break;
   }
 }
@@ -1946,4 +1993,14 @@ function renderLogsTable() {
   }).join('');
 
   renderPagination('logs', totalCount, pageLogs);
+}
+
+// ==========================================
+// 12. MODULE: FWORK EMBEDDED PLATFORM
+// ==========================================
+function loadFworkManager() {
+  const iframe = document.getElementById('fwork-iframe');
+  if (iframe && !iframe.src) {
+    iframe.src = 'https://fwork.onrender.com/login';
+  }
 }

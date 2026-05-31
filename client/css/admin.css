@@ -48,6 +48,11 @@ body {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-sidebar.collapsed {
+  margin-left: -250px;
 }
 
 .sidebar-header {
@@ -66,6 +71,26 @@ body {
 .sidebar-header h2 {
   font-size: 1.2rem;
   font-weight: 700;
+  color: #ffffff;
+}
+
+.sidebar-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #cbd5e1;
+  font-size: 1.2rem;
+  cursor: pointer;
+  margin-left: auto;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.sidebar-close-btn:hover {
+  background-color: var(--sidebar-hover);
   color: #ffffff;
 }
 
@@ -138,6 +163,23 @@ body {
   align-items: center;
   padding: 0 32px;
   flex-shrink: 0;
+}
+
+#sidebar-mobile-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: var(--text-main);
+  margin-right: 12px;
+}
+
+/* On desktop, show toggle button when sidebar is collapsed */
+.admin-sidebar.collapsed + .admin-content #sidebar-mobile-toggle {
+  display: inline-flex !important;
 }
 
 .nav-user {
@@ -646,14 +688,6 @@ table.admin-table tr.active-row {
 
   #sidebar-mobile-toggle {
     display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: none;
-    font-size: 1.25rem;
-    cursor: pointer;
-    color: var(--text-main);
-    margin-right: 12px;
   }
 
   .admin-navbar {
