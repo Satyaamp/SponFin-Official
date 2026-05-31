@@ -308,10 +308,12 @@
 
       <!-- 6. PANEL: SETTINGS -->
       <div class="tab-panel" id="panel-settings">
-        <div class="panel-header">
-          <h2>Global Settings Configuration</h2>
-        </div>
         <form id="form-settings" enctype="multipart/form-data">
+          <div class="panel-header">
+            <h2>Global Settings Configuration</h2>
+            <button type="submit" class="btn-admin btn-admin-primary" style="padding: 10px 20px; font-size:13px;">Save
+              Settings</button>
+          </div>
 
           <!-- General Profile -->
           <div class="settings-section">
@@ -426,7 +428,7 @@
       <!-- 7. PANEL: USERS -->
       <div class="tab-panel" id="panel-users">
         <div class="panel-header">
-          <h2>Manage Administrative Access</h2>
+          <h2>Manage Roles</h2>
           <button class="btn-admin btn-admin-primary" id="btn-add-user">Add User</button>
         </div>
         <div class="table-wrapper"
@@ -842,19 +844,7 @@
   <!-- Central script engine imports -->
   <script src="/js/api.js"></script>
   <script src="/js/admin.js"></script>
-  <!--Start of Tawk.to Script-->
-  <script type="text/javascript">
-    var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
-    (function () {
-      var s1 = document.createElement("script"), s0 = document.getElementsByTagName("script")[0];
-      s1.async = true;
-      s1.src = 'https://embed.tawk.to/6a1bf04c1125ab1c31508019/1jpui5b6o';
-      s1.charset = 'UTF-8';
-      s1.setAttribute('crossorigin', '*');
-      s0.parentNode.insertBefore(s1, s0);
-    })();
-  </script>
-  <!--End of Tawk.to Script-->
+
 </body>
 
 </html>

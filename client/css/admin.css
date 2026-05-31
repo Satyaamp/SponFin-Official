@@ -632,6 +632,18 @@ table.admin-table tr.active-row {
 10. RESPONSIVE MOBILE LAYOUT
 ========================================== */
 @media (max-width: 768px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .kpi-card {
+    padding: 16px;
+  }
+  .kpi-card .card-value {
+    font-size: 1.6rem;
+  }
+
   #sidebar-mobile-toggle {
     display: inline-flex !important;
     align-items: center;

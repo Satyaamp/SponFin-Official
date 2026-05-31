@@ -209,14 +209,14 @@ async function triggerPanelLoad(tab) {
       const oldRole = currentUser ? currentUser.role : null;
       currentUser = freshUser.user;
       API.setUser(currentUser);
-      
+
       // Update role label
       const userRoleEl = document.getElementById('nav-user-role');
       if (userRoleEl) {
         userRoleEl.textContent = currentUser.role.replace('_', ' ');
         userRoleEl.className = `user-badge ${currentUser.role}`;
       }
-      
+
       // Dynamic sidebar item visibility
       const leadsSidebarItem = document.querySelector('.sidebar-item[data-tab="leads"]');
       if (leadsSidebarItem) {
@@ -235,7 +235,7 @@ async function triggerPanelLoad(tab) {
           logsSidebarItem.style.display = 'none';
         }
       }
-      
+
       // If the role changed, reload views
       if (oldRole && oldRole !== currentUser.role) {
         if (currentUser.role === 'editor' && tab === 'leads') {
@@ -342,7 +342,7 @@ async function loadDashboardStats() {
           <td>${escapeHTML(l.email)}</td>
           <td>${escapeHTML(l.service)}</td>
           <td><span class="status-badge ${l.status}">${l.status}</span></td>
-          <td>${new Date(l.createdAt).toLocaleDateString()}</td>
+          <td>${formatDateOnly(l.createdAt)}</td>
         </tr>
       `).join('');
     }
@@ -718,7 +718,7 @@ function renderBlogsTable() {
         <td><strong>${escapeHTML(b.title)}</strong></td>
         <td>${escapeHTML(authorName)}</td>
         <td><span class="status-badge ${b.status}">${b.status}</span></td>
-        <td>${new Date(b.createdAt).toLocaleDateString()}</td>
+        <td>${formatDateOnly(b.createdAt)}</td>
         <td>
           <button class="btn-admin btn-admin-secondary btn-admin-sm" onclick="openBlogModal('${b._id}')">Edit</button>
           ${deleteBtn}
@@ -910,7 +910,7 @@ function renderLeadsTable() {
           </select>
           ${l.status === 'closed' && l.closedBy ? `
             <div style="font-size:10px; color:var(--success-color); font-weight:600; margin-top:2px;" title="Closed by ${escapeHTML(l.closedBy)}">Signed: ${escapeHTML(l.closedBy)}</div>
-            ${l.closedAt ? `<div style="font-size:9px; color:var(--text-muted);">${new Date(l.closedAt).toLocaleString()}</div>` : ''}
+            ${l.closedAt ? `<div style="font-size:9px; color:var(--text-muted);">${formatDateTime(l.closedAt)}</div>` : ''}
           ` : ''}
         </td>
         <td>
@@ -942,7 +942,7 @@ function updateLeadDetailsPane(id) {
   document.getElementById('detail-lead-company').textContent = lead.company || 'N/A';
   document.getElementById('detail-lead-service').textContent = lead.service;
   document.getElementById('detail-lead-message').textContent = lead.message;
-  document.getElementById('detail-lead-date').textContent = new Date(lead.createdAt).toLocaleString();
+  document.getElementById('detail-lead-date').textContent = formatDateTime(lead.createdAt);
 
   const statusEl = document.getElementById('detail-lead-status');
   if (statusEl) {
@@ -954,7 +954,7 @@ function updateLeadDetailsPane(id) {
   const closedByEl = document.getElementById('detail-lead-closed-by');
   if (closedByContainer && closedByEl) {
     if (lead.status === 'closed' && lead.closedBy) {
-      const closedDateStr = lead.closedAt ? ` on ${new Date(lead.closedAt).toLocaleString()}` : '';
+      const closedDateStr = lead.closedAt ? ` on ${formatDateTime(lead.closedAt)}` : '';
       closedByEl.textContent = `${lead.closedBy}${closedDateStr}`;
       closedByContainer.style.display = 'block';
     } else {
@@ -1408,9 +1408,9 @@ function openUserModal(id = null) {
                 </div>
               `;
             };
-            
+
             updateTimerMessage();
-            
+
             const timer = setInterval(async () => {
               secondsLeft--;
               const countdownEl = document.getElementById('logout-countdown');
@@ -1530,7 +1530,7 @@ function loadPermissionsManager() {
   const userRoleEl = document.getElementById('perm-user-role');
   const userAvatarEl = document.getElementById('perm-user-avatar');
   const matrixTable = document.getElementById('permissions-matrix-table');
-  
+
   if (!currentUser) return;
 
   if (userNameEl) userNameEl.textContent = currentUser.name;
@@ -1544,7 +1544,7 @@ function loadPermissionsManager() {
 
   if (matrixTable) {
     const role = currentUser.role;
-    
+
     // Matrix data structure
     const check = '<span style="color: var(--success-color); font-weight: bold; font-size: 14px;"><i class="fas fa-check-circle"></i> Yes</span>';
     const cross = '<span style="color: var(--danger-color); font-weight: bold; font-size: 14px;"><i class="fas fa-times-circle"></i> No</span>';
@@ -1621,11 +1621,11 @@ function loadPermissionsManager() {
       // Sort history descending by start date
       const sortedHistory = [...currentUser.roleHistory].sort((a, b) => new Date(b.fromDate) - new Date(a.fromDate));
       historyTable.innerHTML = sortedHistory.map(h => {
-        const toDateStr = h.toDate ? new Date(h.toDate).toLocaleString() : '<span style="color:var(--success-color);font-weight:600;"><i class="fas fa-toggle-on"></i> Present (Active)</span>';
+        const toDateStr = h.toDate ? formatDateTime(h.toDate) : '<span style="color:var(--success-color);font-weight:600;"><i class="fas fa-toggle-on"></i> Present (Active)</span>';
         return `
           <tr>
             <td><span class="status-badge ${h.role}">${h.role.replace('_', ' ')}</span></td>
-            <td>${new Date(h.fromDate).toLocaleString()}</td>
+            <td>${formatDateTime(h.fromDate)}</td>
             <td>${toDateStr}</td>
             <td><strong>${escapeHTML(h.changedBy)}</strong></td>
           </tr>
@@ -1637,13 +1637,47 @@ function loadPermissionsManager() {
       historyTable.innerHTML = `
         <tr>
           <td><span class="status-badge ${currentUser.role}">${currentUser.role.replace('_', ' ')}</span></td>
-          <td>${new Date(fromDate).toLocaleString()}</td>
+          <td>${formatDateTime(fromDate)}</td>
           <td><span style="color:var(--success-color);font-weight:600;"><i class="fas fa-toggle-on"></i> Present (Active)</span></td>
           <td><strong>System (Initial Setup)</strong></td>
         </tr>
       `;
     }
   }
+}
+
+// ==========================================
+// DATE FORMATTING HELPERS
+// ==========================================
+function formatDateTime(dateInput) {
+  if (!dateInput) return '';
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return '';
+
+  const d = date.getDate();
+  const m = date.getMonth() + 1;
+  const y = date.getFullYear();
+
+  let hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+
+  return `${d}/${m}/${y}, ${hours}:${minutes}:${seconds} ${ampm}`;
+}
+
+function formatDateOnly(dateInput) {
+  if (!dateInput) return '';
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return '';
+
+  const d = date.getDate();
+  const m = date.getMonth() + 1;
+  const y = date.getFullYear();
+
+  return `${d}/${m}/${y}`;
 }
 
 // ==========================================
@@ -1702,9 +1736,9 @@ function downloadLeadsExcel() {
     l.service || '',
     l.message.replace(/\r?\n|\r/g, ' '),
     l.status,
-    new Date(l.createdAt).toLocaleString(),
+    formatDateTime(l.createdAt),
     l.closedBy || '',
-    l.closedAt ? new Date(l.closedAt).toLocaleString() : ''
+    l.closedAt ? formatDateTime(l.closedAt) : ''
   ]);
 
   let csvContent = "\uFEFF";
@@ -1741,10 +1775,10 @@ function downloadLeadsPDF() {
       <td>${escapeHTML(l.company || 'N/A')}</td>
       <td>${escapeHTML(l.service)}</td>
       <td style="text-transform: capitalize;">${escapeHTML(l.status)}</td>
-      <td>${new Date(l.createdAt).toLocaleDateString()}</td>
+      <td>${formatDateOnly(l.createdAt)}</td>
       <td>
         ${escapeHTML(l.closedBy || 'N/A')}
-        ${l.closedAt ? `<div style="color:#6b7280; font-size:9px; margin-top:2px;">${new Date(l.closedAt).toLocaleString()}</div>` : ''}
+        ${l.closedAt ? `<div style="color:#6b7280; font-size:9px; margin-top:2px;">${formatDateTime(l.closedAt)}</div>` : ''}
       </td>
     </tr>
   `).join('');
@@ -1775,7 +1809,7 @@ function downloadLeadsPDF() {
             <p>Customer Relationship Management - Inquiry Leads Logs</p>
           </div>
           <div class="meta-info">
-            <div><strong>Generated:</strong> ${new Date().toLocaleString()}</div>
+            <div><strong>Generated:</strong> ${formatDateTime(new Date())}</div>
             <div><strong>Total Records:</strong> ${leadsData.length}</div>
           </div>
         </div>
@@ -1898,7 +1932,7 @@ function renderLogsTable() {
   const paginatedData = logsData.slice(start, end);
 
   tableBody.innerHTML = paginatedData.map(log => {
-    const dateStr = new Date(log.createdAt).toLocaleString();
+    const dateStr = formatDateTime(log.createdAt);
     return `
       <tr>
         <td>${dateStr}</td>
