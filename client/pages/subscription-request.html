@@ -33,7 +33,7 @@
           <li><a href="/">Home</a></li>
           <li><a href="/about">About</a></li>
           <li><a href="/services">Services</a></li>
-          <li><a href="/portfolio" class="active">Portfolio</a></li>
+          <li><a href="/portfolio">Portfolio</a></li>
           <li><a href="/#pricing">Plans</a></li>
           <li><a href="/blog">Blog</a></li>
           <li><a href="/contact" class="btn-contact-nav">Contact Us</a></li>
@@ -45,24 +45,69 @@
   <!-- Page Content -->
   <main style="padding-top: 120px; min-height: 80vh;">
     <section class="section">
-      <div class="container">
-        <div class="section-header">
-          <h2>Portfolio Showcase</h2>
-          <p>Explore a collection of websites, mobile applications, dashboard analytics, and marketing campaigns
-            designed for brand visibility.</p>
+      <div class="container contact-grid">
+        <div class="contact-info">
+          <h3>Subscribe to SponFin</h3>
+          <p style="color:var(--text-muted); margin-bottom: 30px;">Choose a pre-packaged plan that perfectly suits your
+            digital growth and brand activation goals. Submit the inquiry form to get started, and our support team will
+            get in touch with you shortly.</p>
+
+          <div class="contact-info-list">
+            <div class="contact-info-item">
+              <span class="contact-info-icon">&#9993;</span>
+              <div class="contact-info-text">
+                <h4>Email Support</h4>
+                <p id="footer-email">support@sponfin.com</p>
+              </div>
+            </div>
+            <div class="contact-info-item">
+              <span class="contact-info-icon">&#9743;</span>
+              <div class="contact-info-text">
+                <h4>Direct Phone</h4>
+                <p id="footer-phone">+1 (555) 123-4567</p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Category Tab filters -->
-        <div class="portfolio-tabs" id="portfolio-page-tabs">
-          <button class="tab-btn active" data-filter="all">All Projects</button>
-          <button class="tab-btn" data-filter="Website">Websites</button>
-          <button class="tab-btn" data-filter="Mobile App">Mobile Apps</button>
-          <button class="tab-btn" data-filter="Analytics">Analytics</button>
-          <button class="tab-btn" data-filter="Marketing">Marketing</button>
-        </div>
+        <div class="contact-form-wrapper">
+          <h3>Subscription Inquiry</h3>
+          <form id="subscribe-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="sub-name">Name *</label>
+                <input type="text" id="sub-name" placeholder="Satyam Kumar" required>
+              </div>
+              <div class="form-group">
+                <label for="sub-email">Email *</label>
+                <input type="email" id="sub-email" placeholder="sponfinworks@gmail.com" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="sub-phone">Phone Number</label>
+                <input type="text" id="sub-phone" placeholder="7321805409">
+              </div>
+              <div class="form-group">
+                <label for="sub-company">Company</label>
+                <input type="text" id="sub-company" placeholder="Acme Corp">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="sub-plan">Interested Subscription Plan *</label>
+              <select id="sub-plan" required>
+                <!-- Dynamic Plans Rendered via main.js -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="sub-message">Message *</label>
+              <textarea id="sub-message" placeholder="Describe your branding or project requirements..."
+                required></textarea>
+            </div>
 
-        <div class="portfolio-grid" id="portfolio-page-grid">
-          <!-- Rendered Dynamically -->
+            <button type="submit" class="btn-submit">Send Subscription Inquiry</button>
+            <div id="form-message" class="form-message"></div>
+          </form>
         </div>
       </div>
     </section>

@@ -36,6 +36,8 @@ app.use('/api/leads', require('./server/routes/leadRoutes'));
 app.use('/api/settings', require('./server/routes/settingRoutes'));
 app.use('/api/users', require('./server/routes/userRoutes'));
 app.use('/api/logs', require('./server/routes/logRoutes'));
+app.use('/api/subscriptions', require('./server/routes/subscriptionRoutes'));
+app.use('/api/subscription-requests', require('./server/routes/subscriptionRequestRoutes'));
 
 // Frontend Page Routes (with server-side SEO HTML injection)
 app.get('/', async (req, res, next) => {
@@ -92,6 +94,13 @@ app.get('/blog/:slug', async (req, res, next) => {
 app.get('/contact', async (req, res, next) => {
   try {
     const html = await injectSEO(path.join(__dirname, 'client/pages/contact.html'), { title: 'Contact Us' }, req);
+    res.send(html);
+  } catch (err) { next(err); }
+});
+
+app.get('/subscription-request', async (req, res, next) => {
+  try {
+    const html = await injectSEO(path.join(__dirname, 'client/pages/subscription-request.html'), { title: 'Subscription Request' }, req);
     res.send(html);
   } catch (err) { next(err); }
 });

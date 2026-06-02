@@ -67,9 +67,11 @@ let currentUser = null;
 // Pagination configuration and state variables
 const PAGE_SIZE = 10;
 let pageServices = 1;
+let pageSubscriptions = 1;
 let pageProjects = 1;
 let pageBlogs = 1;
 let pageLeads = 1;
+let pageSubscriptionRequests = 1;
 let pageUsers = 1;
 let pageLogs = 1;
 
@@ -113,6 +115,16 @@ async function initDashboardFlow() {
       leadsSidebarItem.style.display = 'none';
     } else {
       leadsSidebarItem.style.display = 'inline-flex';
+    }
+  }
+
+  // Hide Subscription Requests sidebar item for editor level
+  const subRequestsSidebarItem = document.querySelector('.sidebar-item[data-tab="subscription-requests"]');
+  if (subRequestsSidebarItem) {
+    if (currentUser.role === 'editor') {
+      subRequestsSidebarItem.style.display = 'none';
+    } else {
+      subRequestsSidebarItem.style.display = 'inline-flex';
     }
   }
 
@@ -229,6 +241,14 @@ async function triggerPanelLoad(tab) {
     }
   }
 
+  if ((tab === 'leads' || tab === 'subscription-requests') && currentUser && currentUser.role === 'editor') {
+    const dashboardMenuItem = document.querySelector('.sidebar-item[data-tab="dashboard"]');
+    if (dashboardMenuItem) {
+      dashboardMenuItem.click();
+      return;
+    }
+  }
+
   // Sync the latest user profile state from server on tab load to catch dynamic role changes
   try {
     const freshUser = await API.getMe();
@@ -254,6 +274,15 @@ async function triggerPanelLoad(tab) {
         }
       }
 
+      const subRequestsSidebarItem = document.querySelector('.sidebar-item[data-tab="subscription-requests"]');
+      if (subRequestsSidebarItem) {
+        if (currentUser.role === 'editor') {
+          subRequestsSidebarItem.style.display = 'none';
+        } else {
+          subRequestsSidebarItem.style.display = 'inline-flex';
+        }
+      }
+
       const logsSidebarItem = document.getElementById('sidebar-item-logs');
       if (logsSidebarItem) {
         if (currentUser.role === 'super_admin') {
@@ -274,8 +303,8 @@ async function triggerPanelLoad(tab) {
 
       // If the role changed, reload views
       if (oldRole && oldRole !== currentUser.role) {
-        if (currentUser.role === 'editor' && tab === 'leads') {
-          // Redirect them to dashboard since they no longer have access to leads
+        if (currentUser.role === 'editor' && (tab === 'leads' || tab === 'subscription-requests')) {
+          // Redirect them to dashboard since they no longer have access to leads or subscription requests
           const dashboardMenuItem = document.querySelector('.sidebar-item[data-tab="dashboard"]');
           if (dashboardMenuItem) {
             dashboardMenuItem.click();
@@ -311,6 +340,9 @@ async function triggerPanelLoad(tab) {
     case 'services':
       loadServicesManager();
       break;
+    case 'subscriptions':
+      loadSubscriptionsManager();
+      break;
     case 'projects':
       loadProjectsManager();
       break;
@@ -319,6 +351,9 @@ async function triggerPanelLoad(tab) {
       break;
     case 'leads':
       loadLeadsManager();
+      break;
+    case 'subscription-requests':
+      loadSubscriptionRequestsManager();
       break;
     case 'settings':
       loadSettingsManager();
@@ -541,6 +576,144 @@ async function deleteService(id) {
       }
     } catch (err) {
       alert(err.message || 'Failed to delete service.');
+    }
+  }
+}
+
+// ==========================================
+// 4.5 MODULE: SUBSCRIPTIONS MANAGER
+// ==========================================
+let subscriptionsData = [];
+
+async function loadSubscriptionsManager() {
+  const tableBody = document.getElementById('subscriptions-table');
+  const addBtn = document.getElementById('btn-add-subscription');
+
+  // Bind Create button
+  if (addBtn) {
+    addBtn.onclick = () => {
+      openSubscriptionModal();
+    };
+  }
+
+  try {
+    const response = await API.getSubscriptions(true);
+    if (response.success) {
+      subscriptionsData = response.data;
+      pageSubscriptions = 1; // Reset to page 1
+      renderSubscriptionsTable();
+    }
+  } catch (e) {
+    console.error('Error loading subscriptions manager:', e);
+  }
+}
+
+function renderSubscriptionsTable() {
+  const tableBody = document.getElementById('subscriptions-table');
+  if (!tableBody) return;
+
+  const totalCount = subscriptionsData.length;
+  if (totalCount === 0) {
+    tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;">No subscription plans configured. Click "Add Plan" to create one.</td></tr>`;
+    renderPagination('subscriptions', 0, 1);
+    return;
+  }
+
+  const start = (pageSubscriptions - 1) * PAGE_SIZE;
+  const end = start + PAGE_SIZE;
+  const paginatedData = subscriptionsData.slice(start, end);
+
+  tableBody.innerHTML = paginatedData.map(s => {
+    const showDelete = currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'admin');
+    const deleteBtn = showDelete ? `<button class="btn-admin btn-admin-danger btn-admin-sm" onclick="deleteSubscription('${s._id}')">Delete</button>` : '';
+    return `
+      <tr>
+        <td><strong>${escapeHTML(s.title)}</strong></td>
+        <td>${escapeHTML(s.price)}</td>
+        <td>${s.displayOrder}</td>
+        <td><span class="status-badge active-${s.isActive}">${s.isActive ? 'Active' : 'Draft'}</span></td>
+        <td>
+          <button class="btn-admin btn-admin-secondary btn-admin-sm" onclick="openSubscriptionModal('${s._id}')">Edit</button>
+          ${deleteBtn}
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  renderPagination('subscriptions', totalCount, pageSubscriptions);
+}
+
+function openSubscriptionModal(id = null) {
+  const modal = document.getElementById('modal-subscription');
+  const form = document.getElementById('form-subscription');
+  const titleEl = document.getElementById('modal-subscription-title');
+
+  if (!modal || !form) return;
+  form.reset();
+
+  if (id) {
+    titleEl.textContent = 'Edit Subscription Plan';
+    const s = subscriptionsData.find(item => item._id === id);
+    if (s) {
+      document.getElementById('subscription-id').value = s._id;
+      document.getElementById('subscription-title').value = s.title;
+      document.getElementById('subscription-price').value = s.price;
+      document.getElementById('subscription-desc').value = s.description || '';
+      document.getElementById('subscription-objective').value = s.objective || '';
+      document.getElementById('subscription-features').value = s.features || '';
+      document.getElementById('subscription-order').value = s.displayOrder;
+      document.getElementById('subscription-active').checked = s.isActive;
+    }
+  } else {
+    titleEl.textContent = 'Add Subscription Plan';
+    document.getElementById('subscription-id').value = '';
+    document.getElementById('subscription-order').value = '0';
+    document.getElementById('subscription-active').checked = true;
+  }
+
+  modal.classList.add('active');
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const subscriptionId = document.getElementById('subscription-id').value;
+    
+    const data = {
+      title: document.getElementById('subscription-title').value,
+      price: document.getElementById('subscription-price').value,
+      description: document.getElementById('subscription-desc').value,
+      objective: document.getElementById('subscription-objective').value,
+      features: document.getElementById('subscription-features').value,
+      displayOrder: document.getElementById('subscription-order').value,
+      isActive: document.getElementById('subscription-active').checked
+    };
+
+    try {
+      let response;
+      if (subscriptionId) {
+        response = await API.updateSubscription(subscriptionId, data);
+      } else {
+        response = await API.createSubscription(data);
+      }
+
+      if (response.success) {
+        modal.classList.remove('active');
+        loadSubscriptionsManager();
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to save subscription plan.');
+    }
+  };
+}
+
+async function deleteSubscription(id) {
+  if (confirm('Are you sure you want to delete this subscription plan?')) {
+    try {
+      const response = await API.deleteSubscription(id);
+      if (response.success) {
+        loadSubscriptionsManager();
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to delete subscription plan.');
     }
   }
 }
@@ -904,6 +1077,7 @@ let leadsData = [];
 let activeLeadId = null;
 let currentLeadToClose = null;
 let currentLeadSelectEl = null;
+let signatureTargetType = 'lead';
 
 async function loadLeadsManager() {
   try {
@@ -1024,6 +1198,7 @@ function handleLeadStatusSelectChange(id, selectElement) {
   const newStatus = selectElement.value;
 
   if (newStatus === 'closed') {
+    signatureTargetType = 'lead';
     currentLeadToClose = id;
     currentLeadSelectEl = selectElement;
     openSignatureModal();
@@ -1061,13 +1236,23 @@ function openSignatureModal() {
       }
 
       try {
-        const response = await API.updateLead(currentLeadToClose, 'closed', signatureName);
+        let response;
+        if (signatureTargetType === 'subscription-request') {
+          response = await API.updateSubscriptionRequest(currentLeadToClose, 'closed', signatureName);
+        } else {
+          response = await API.updateLead(currentLeadToClose, 'closed', signatureName);
+        }
+
         if (response.success) {
           closeSignatureModal();
-          loadLeadsManager();
+          if (signatureTargetType === 'subscription-request') {
+            loadSubscriptionRequestsManager();
+          } else {
+            loadLeadsManager();
+          }
         }
       } catch (err) {
-        alert(err.message || 'Failed to close lead.');
+        alert(err.message || `Failed to close ${signatureTargetType === 'subscription-request' ? 'subscription request' : 'lead'}.`);
         if (currentLeadSelectEl) {
           currentLeadSelectEl.value = currentLeadSelectEl.getAttribute('data-prev');
         }
@@ -1551,6 +1736,9 @@ function changePage(tabName, newPage) {
   if (tabName === 'services') {
     pageServices = newPage;
     renderServicesTable();
+  } else if (tabName === 'subscriptions') {
+    pageSubscriptions = newPage;
+    renderSubscriptionsTable();
   } else if (tabName === 'projects') {
     pageProjects = newPage;
     renderProjectsTable();
@@ -1560,6 +1748,9 @@ function changePage(tabName, newPage) {
   } else if (tabName === 'leads') {
     pageLeads = newPage;
     renderLeadsTable();
+  } else if (tabName === 'subscription-requests') {
+    pageSubscriptionRequests = newPage;
+    renderSubscriptionRequestsTable();
   } else if (tabName === 'users') {
     pageUsers = newPage;
     renderUsersTable();
@@ -1888,12 +2079,163 @@ function downloadLeadsPDF() {
   printWindow.document.close();
 }
 
+// ==========================================
+// EXPORT SUBSCRIPTION REQUESTS DATA (EXCEL & PDF)
+// ==========================================
+function toggleSubRequestsExportDropdown(event) {
+  event.stopPropagation();
+  const dropdown = document.getElementById('sub-requests-export-dropdown-content');
+  if (dropdown) {
+    const isHidden = dropdown.style.display === 'none' || dropdown.style.display === '';
+    dropdown.style.display = isHidden ? 'block' : 'none';
+  }
+}
+
+function exportSubRequests(format, event) {
+  if (event) event.preventDefault();
+
+  const dropdown = document.getElementById('sub-requests-export-dropdown-content');
+  if (dropdown) dropdown.style.display = 'none';
+
+  if (!subscriptionRequestsData || subscriptionRequestsData.length === 0) {
+    alert('No subscription request records available to export.');
+    return;
+  }
+
+  if (format === 'excel') {
+    downloadSubRequestsExcel();
+  } else if (format === 'pdf') {
+    downloadSubRequestsPDF();
+  }
+}
+
+function downloadSubRequestsExcel() {
+  const headers = ['Name', 'Email', 'Phone', 'Company', 'Selected Plan', 'Message', 'Status', 'Date Received', 'Closed By', 'Closed At'];
+  const rows = subscriptionRequestsData.map(r => [
+    r.name,
+    r.email,
+    r.phone || '',
+    r.company || '',
+    r.plan || '',
+    r.message.replace(/\r?\n|\r/g, ' '),
+    r.status,
+    formatDateTime(r.createdAt),
+    r.closedBy || '',
+    r.closedAt ? formatDateTime(r.closedAt) : ''
+  ]);
+
+  let csvContent = "\uFEFF";
+  csvContent += headers.map(h => `"${h.replace(/"/g, '""')}"`).join(',') + "\r\n";
+
+  rows.forEach(row => {
+    csvContent += row.map(val => `"${val.replace(/"/g, '""')}"`).join(',') + "\r\n";
+  });
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", `SponFin_Subscription_Requests_${new Date().toISOString().slice(0, 10)}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function downloadSubRequestsPDF() {
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    alert('Pop-up blocked! Please allow pop-ups to download the PDF report.');
+    return;
+  }
+
+  const rowsHtml = subscriptionRequestsData.map(r => `
+    <tr>
+      <td><strong>${escapeHTML(r.name)}</strong></td>
+      <td>
+        <div>${escapeHTML(r.email)}</div>
+        <div style="color:#6b7280; font-size:10px; margin-top:2px;">${escapeHTML(r.phone || 'N/A')}</div>
+      </td>
+      <td>${escapeHTML(r.company || 'N/A')}</td>
+      <td>${escapeHTML(r.plan)}</td>
+      <td style="text-transform: capitalize;">${escapeHTML(r.status)}</td>
+      <td>${formatDateOnly(r.createdAt)}</td>
+      <td>
+        ${escapeHTML(r.closedBy || 'N/A')}
+        ${r.closedAt ? `<div style="color:#6b7280; font-size:9px; margin-top:2px;">${formatDateTime(r.closedAt)}</div>` : ''}
+      </td>
+    </tr>
+  `).join('');
+
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>SponFin Subscription Requests Report</title>
+        <style>
+          body { font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; color: #1f2937; line-height: 1.4; }
+          .header-container { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2563eb; padding-bottom: 15px; margin-bottom: 20px; }
+          .title-area h2 { margin: 0; color: #1e3a8a; font-size: 24px; font-weight: 700; }
+          .title-area p { margin: 5px 0 0 0; font-size: 12px; color: #4b5563; }
+          .meta-info { text-align: right; font-size: 11px; color: #6b7280; }
+          table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; }
+          th, td { border: 1px solid #e5e7eb; padding: 10px 12px; text-align: left; vertical-align: middle; }
+          th { background-color: #f3f4f6; font-weight: 600; color: #374151; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; }
+          tr:nth-child(even) { background-color: #f9fafb; }
+          @media print {
+            body { padding: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header-container">
+          <div class="title-area">
+            <h2>SponFin Backoffice Report</h2>
+            <p>Customer Relationship Management - Subscription Inquiries</p>
+          </div>
+          <div class="meta-info">
+            <div><strong>Generated:</strong> ${formatDateTime(new Date())}</div>
+            <div><strong>Total Records:</strong> ${subscriptionRequestsData.length}</div>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 13%;">Name</th>
+              <th style="width: 17%;">Contact Info</th>
+              <th style="width: 13%;">Company</th>
+              <th style="width: 14%;">Selected Plan</th>
+              <th style="width: 10%;">Status</th>
+              <th style="width: 11%;">Received Date</th>
+              <th style="width: 22%;">Closed By & Timestamp</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+        <script>
+          window.onload = function() {
+            window.print();
+            setTimeout(function() { window.close(); }, 500);
+          }
+        </script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+}
+
 // Global click handler to close dropdown when clicking outside
 window.addEventListener('click', (e) => {
   const dropdown = document.getElementById('export-dropdown-content');
   const btn = document.getElementById('btn-export-leads');
   if (dropdown && btn && !btn.contains(e.target) && !dropdown.contains(e.target)) {
     dropdown.style.display = 'none';
+  }
+
+  const subDropdown = document.getElementById('sub-requests-export-dropdown-content');
+  const subBtn = document.getElementById('btn-export-sub-requests');
+  if (subDropdown && subBtn && !subBtn.contains(e.target) && !subDropdown.contains(e.target)) {
+    subDropdown.style.display = 'none';
   }
 });
 
@@ -2002,5 +2344,172 @@ function loadFworkManager() {
   const iframe = document.getElementById('fwork-iframe');
   if (iframe && !iframe.src) {
     iframe.src = 'https://fwork.onrender.com/login';
+  }
+}
+
+// ==========================================
+// 13. MODULE: SUBSCRIPTION REQUESTS MANAGER
+// ==========================================
+let subscriptionRequestsData = [];
+let activeSubscriptionRequestId = null;
+
+async function loadSubscriptionRequestsManager() {
+  try {
+    const response = await API.getSubscriptionRequests();
+    if (response.success) {
+      subscriptionRequestsData = response.data;
+      pageSubscriptionRequests = 1; // Reset to page 1
+      renderSubscriptionRequestsTable();
+      if (activeSubscriptionRequestId) {
+        updateSubscriptionRequestDetailsPane(activeSubscriptionRequestId);
+      }
+    }
+  } catch (e) {
+    console.error('Error loading subscription requests:', e);
+    const tableBody = document.getElementById('subscription-requests-table');
+    if (tableBody) {
+      tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--danger-color);">Error: Failed to load subscription requests list.</td></tr>`;
+    }
+  }
+}
+
+function renderSubscriptionRequestsTable() {
+  const tableBody = document.getElementById('subscription-requests-table');
+  if (!tableBody) return;
+
+  const totalCount = subscriptionRequestsData.length;
+  if (totalCount === 0) {
+    tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No subscription requests received yet.</td></tr>`;
+    renderPagination('subscription-requests', 0, 1);
+    return;
+  }
+
+  const start = (pageSubscriptionRequests - 1) * PAGE_SIZE;
+  const end = start + PAGE_SIZE;
+  const paginatedData = subscriptionRequestsData.slice(start, end);
+
+  tableBody.innerHTML = paginatedData.map(r => {
+    const isActive = r._id === activeSubscriptionRequestId;
+    const showDelete = currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'admin');
+    const deleteBtn = showDelete ? `<button class="btn-admin btn-admin-danger btn-admin-sm" onclick="deleteSubscriptionRequest('${r._id}')">Delete</button>` : '';
+    
+    return `
+      <tr class="${isActive ? 'active-row' : ''}">
+        <td><strong>${escapeHTML(r.name)}</strong></td>
+        <td>
+          <div>${escapeHTML(r.email)}</div>
+          <div style="font-size:11px; color:var(--text-muted);">${escapeHTML(r.phone || 'No phone')}</div>
+        </td>
+        <td>${escapeHTML(r.company || 'N/A')}</td>
+        <td><span class="status-badge admin">${escapeHTML(r.plan)}</span></td>
+        <td>
+          <select data-prev="${r.status}" onchange="handleSubscriptionRequestStatusSelectChange('${r._id}', this)" style="padding: 4px; border: 1px solid var(--border-color); border-radius: 4px; font-size:12px; display: block; margin-bottom: 2px;" ${r.status === 'closed' ? 'disabled' : ''}>
+            <option value="new" ${r.status === 'new' ? 'selected' : ''}>New</option>
+            <option value="contacted" ${r.status === 'contacted' ? 'selected' : ''}>Contacted</option>
+            <option value="closed" ${r.status === 'closed' ? 'selected' : ''}>Closed</option>
+          </select>
+          ${r.status === 'closed' && r.closedBy ? `
+            <div style="font-size:10px; color:var(--success-color); font-weight:600; margin-top:2px;" title="Closed by ${escapeHTML(r.closedBy)}">Signed: ${escapeHTML(r.closedBy)}</div>
+            ${r.closedAt ? `<div style="font-size:9px; color:var(--text-muted);">${formatDateTime(r.closedAt)}</div>` : ''}
+          ` : ''}
+        </td>
+        <td>
+          <button class="btn-admin btn-admin-secondary btn-admin-sm" onclick="viewSubscriptionRequest('${r._id}')" style="margin-right: 4px;">
+            <i class="fas fa-eye"></i> View
+          </button>
+          ${deleteBtn}
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  renderPagination('subscription-requests', totalCount, pageSubscriptionRequests);
+}
+
+function viewSubscriptionRequest(id) {
+  activeSubscriptionRequestId = id;
+  renderSubscriptionRequestsTable();
+  updateSubscriptionRequestDetailsPane(id);
+}
+
+function updateSubscriptionRequestDetailsPane(id) {
+  const req = subscriptionRequestsData.find(r => r._id === id);
+  if (!req) return;
+
+  document.getElementById('detail-sub-name').textContent = req.name;
+  document.getElementById('detail-sub-email').textContent = req.email;
+  document.getElementById('detail-sub-phone').textContent = req.phone || 'N/A';
+  document.getElementById('detail-sub-company').textContent = req.company || 'N/A';
+  document.getElementById('detail-sub-plan').textContent = req.plan;
+  document.getElementById('detail-sub-message').textContent = req.message;
+  document.getElementById('detail-sub-date').textContent = formatDateTime(req.createdAt);
+
+  const statusEl = document.getElementById('detail-sub-status');
+  if (statusEl) {
+    statusEl.textContent = req.status;
+    statusEl.className = `status-badge ${req.status}`;
+  }
+
+  const closedByContainer = document.getElementById('detail-sub-closed-by-container');
+  const closedByEl = document.getElementById('detail-sub-closed-by');
+  if (closedByContainer && closedByEl) {
+    if (req.status === 'closed' && req.closedBy) {
+      const closedDateStr = req.closedAt ? ` on ${formatDateTime(req.closedAt)}` : '';
+      closedByEl.textContent = `${req.closedBy}${closedDateStr}`;
+      closedByContainer.style.display = 'block';
+    } else {
+      closedByContainer.style.display = 'none';
+    }
+  }
+
+  const pane = document.getElementById('subscription-request-details-pane');
+  if (pane) pane.style.display = 'block';
+}
+
+function closeSubscriptionRequestDetails() {
+  activeSubscriptionRequestId = null;
+  const pane = document.getElementById('subscription-request-details-pane');
+  if (pane) pane.style.display = 'none';
+  renderSubscriptionRequestsTable();
+}
+
+function handleSubscriptionRequestStatusSelectChange(id, selectElement) {
+  const newStatus = selectElement.value;
+
+  if (newStatus === 'closed') {
+    signatureTargetType = 'subscription-request';
+    currentLeadToClose = id;
+    currentLeadSelectEl = selectElement;
+    openSignatureModal();
+  } else {
+    updateSubscriptionRequestStatus(id, newStatus);
+  }
+}
+
+async function updateSubscriptionRequestStatus(id, newStatus, closedBy = '') {
+  try {
+    const response = await API.updateSubscriptionRequest(id, newStatus, closedBy);
+    if (response.success) {
+      loadSubscriptionRequestsManager();
+    }
+  } catch (err) {
+    alert(err.message || 'Failed to update subscription request status.');
+  }
+}
+
+async function deleteSubscriptionRequest(id) {
+  if (confirm('Are you sure you want to delete this subscription request from the logs?')) {
+    try {
+      const response = await API.deleteSubscriptionRequest(id);
+      if (response.success) {
+        if (activeSubscriptionRequestId === id) {
+          closeSubscriptionRequestDetails();
+        } else {
+          loadSubscriptionRequestsManager();
+        }
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to delete subscription request.');
+    }
   }
 }

@@ -21,6 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
     loadBlogPageContent();
   } else if (path.includes('/contact')) {
     initContactPageForm();
+  } else if (path.includes('/subscription-request')) {
+    initSubscriptionRequestPage();
   }
 });
 
@@ -55,6 +57,28 @@ function initGlobalUI() {
     if (currentPath === href || (href !== '/' && currentPath.startsWith(href))) {
       link.classList.add('active');
     }
+  });
+
+  // Smooth scroll for nav/footer links pointing to hash sections on the same page
+  document.querySelectorAll('nav ul a, footer a, .btn-plans-cta').forEach(link => {
+    link.addEventListener('click', (e) => {
+      const href = link.getAttribute('href');
+      if (href && href.startsWith('/#')) {
+        const targetId = href.substring(2); // Remove "/#"
+        const targetEl = document.getElementById(targetId);
+        if (targetEl && (currentPath === '/' || currentPath === '/index.html' || currentPath === '')) {
+          e.preventDefault();
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          history.pushState(null, null, href);
+
+          // Close mobile menu if open
+          if (navList && navList.classList.contains('active')) {
+            navList.classList.remove('active');
+            if (toggleBtn) toggleBtn.innerHTML = '&#9776;';
+          }
+        }
+      }
+    });
   });
 }
 
@@ -160,16 +184,30 @@ async function loadHomeContent() {
   }
 
   // Load Services (Up to 3 or 4)
-  loadServicesGrid('#services-grid', 3);
+  await loadServicesGrid('#services-grid', 3);
 
   // Load Portfolio Projects (Up to 3 featured)
-  loadPortfolioGrid('#portfolio-grid', 3, { featured: true });
+  await loadPortfolioGrid('#portfolio-grid', 3, { featured: true });
 
   // Load Latest Blogs (Up to 3)
-  loadBlogGrid('#blog-grid', 3);
+  await loadBlogGrid('#blog-grid', 3);
+
+  // Load Subscription Plans
+  await loadPricingPlansGrid();
 
   // Load Contact Form bindings
   initContactPageForm();
+
+  // Scroll to hash target if present (ensures correct scroll position after dynamic content resolves)
+  const hash = window.location.hash;
+  if (hash) {
+    setTimeout(() => {
+      const targetEl = document.querySelector(hash);
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 300);
+  }
 }
 
 // 4. ABOUT PAGE RENDERING
@@ -687,6 +725,199 @@ async function populateServicesDropdown() {
   } catch (err) {
     console.error('Failed to populate services dropdown dynamically:', err);
     // Keep existing static fallback in HTML
+  } finally {
+    selectParameterValue(selectEl);
+  }
+}
+
+// Pre-select service/plan dropdown based on URL query parameters
+function selectParameterValue(selectEl) {
+  if (!selectEl) return;
+  const urlParams = new URLSearchParams(window.location.search);
+  const planParam = urlParams.get('plan');
+  const serviceParam = urlParams.get('service');
+  const targetValue = planParam || serviceParam;
+
+  if (targetValue) {
+    let optionExists = false;
+    for (let i = 0; i < selectEl.options.length; i++) {
+      if (selectEl.options[i].value.toLowerCase() === targetValue.toLowerCase()) {
+        selectEl.selectedIndex = i;
+        optionExists = true;
+        break;
+      }
+    }
+
+    if (!optionExists) {
+      // If it doesn't exist, dynamically add it to the top of the dropdown and select it
+      const newOpt = document.createElement('option');
+      newOpt.value = targetValue;
+      newOpt.textContent = targetValue;
+      newOpt.selected = true;
+      selectEl.insertBefore(newOpt, selectEl.firstChild);
+      selectEl.value = targetValue;
+    }
+  }
+}
+
+// Load Subscription/Pricing plans grid dynamically (omitting price for public display)
+async function loadPricingPlansGrid() {
+  const container = document.getElementById('pricing-grid');
+  if (!container) return;
+
+  try {
+    const response = await API.getSubscriptions(false); // fetch only active plans
+    if (response.success && response.data && response.data.length > 0) {
+      const plans = response.data;
+
+      container.innerHTML = plans.map(p => {
+        // Split features by newline
+        const featuresList = p.features
+          ? p.features.split('\n').filter(f => f.trim() !== '').map(f => `<li><i class="fas fa-check"></i> ${escapeHTML(f.trim())}</li>`).join('')
+          : '';
+
+        const descriptionHTML = p.description ? `<p class="pricing-card-desc">${escapeHTML(p.description)}</p>` : '';
+        const objectiveHTML = p.objective ? `<p class="pricing-card-objective">${escapeHTML(p.objective)}</p>` : '';
+
+        // CTA link
+        const contactLink = `/subscription-request?plan=${encodeURIComponent(p.title)}`;
+
+        return `
+          <div class="pricing-card">
+            <div class="pricing-card-header">
+              <h3>${escapeHTML(p.title)}</h3>
+              ${descriptionHTML}
+            </div>
+            <div class="pricing-card-body">
+              <ul class="pricing-features">
+                ${featuresList}
+              </ul>
+              ${objectiveHTML}
+            </div>
+            <div class="pricing-card-footer">
+              <a href="${contactLink}" target="_blank" class="btn-pricing">TO KNOW MORE</a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } else {
+      const pricingSection = document.getElementById('pricing');
+      if (pricingSection) pricingSection.classList.add('hidden');
+    }
+  } catch (error) {
+    console.error('Error rendering pricing plans grid:', error);
+    const pricingSection = document.getElementById('pricing');
+    if (pricingSection) pricingSection.classList.add('hidden');
+  }
+}
+
+// 9.5 SUBSCRIPTION REQUEST FORM PAGE
+function initSubscriptionRequestPage() {
+  const form = document.getElementById('subscribe-form');
+  if (!form) return;
+
+  populateSubscriptionPlansDropdown();
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const submitBtn = form.querySelector('.btn-submit');
+    const msgBox = document.getElementById('form-message');
+    
+    // Read input values
+    const name = document.getElementById('sub-name').value;
+    const email = document.getElementById('sub-email').value;
+    const phone = document.getElementById('sub-phone') ? document.getElementById('sub-phone').value : '';
+    const company = document.getElementById('sub-company') ? document.getElementById('sub-company').value : '';
+    const plan = document.getElementById('sub-plan').value;
+    const message = document.getElementById('sub-message').value;
+
+    if (!name || !email || !plan || !message) {
+      showFormMessage(msgBox, 'Please fill out all required fields.', 'error');
+      return;
+    }
+
+    try {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting Request...';
+
+      const response = await API.submitSubscriptionRequest({
+        name,
+        email,
+        phone,
+        company,
+        plan,
+        message
+      });
+
+      if (response.success) {
+        showFormMessage(msgBox, 'Thank you! Your subscription inquiry has been submitted. We will contact you soon.', 'success');
+        form.reset();
+      } else {
+        showFormMessage(msgBox, response.message || 'Submission failed. Please try again.', 'error');
+      }
+    } catch (error) {
+      console.error('Subscription Submission Error:', error);
+      showFormMessage(msgBox, 'A connection error occurred. Please try again later.', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send Subscription Inquiry';
+    }
+  });
+}
+
+// Dynamically fetch active subscription plans to populate select dropdown options
+async function populateSubscriptionPlansDropdown() {
+  const selectEl = document.getElementById('sub-plan');
+  if (!selectEl) return;
+
+  try {
+    const response = await API.getSubscriptions(false); // fetch only active plans
+    if (response.success && response.data) {
+      const activePlans = response.data;
+      let optionsHTML = '';
+
+      if (activePlans.length > 0) {
+        optionsHTML += activePlans.map(p => `
+          <option value="${escapeHTML(p.title)}">${escapeHTML(p.title)}</option>
+        `).join('');
+      } else {
+        // Fallback default options if DB is empty
+        optionsHTML += `
+          <option value="Growth Plan">Growth Plan</option>
+          <option value="Business Growth Plan">Business Growth Plan</option>
+          <option value="Premium Brand Plan">Premium Brand Plan</option>
+          <option value="Enterprise Growth Plan">Enterprise Growth Plan</option>
+          <option value="Maintenance & Support Policy">Maintenance & Support Policy</option>
+        `;
+      }
+
+      selectEl.innerHTML = optionsHTML;
+    }
+  } catch (err) {
+    console.error('Failed to populate subscription plans dropdown dynamically:', err);
+  } finally {
+    // Select the plan specified in URL query
+    const urlParams = new URLSearchParams(window.location.search);
+    const planParam = urlParams.get('plan');
+    if (planParam) {
+      let optionExists = false;
+      for (let i = 0; i < selectEl.options.length; i++) {
+        if (selectEl.options[i].value.toLowerCase() === planParam.toLowerCase()) {
+          selectEl.selectedIndex = i;
+          optionExists = true;
+          break;
+        }
+      }
+      if (!optionExists) {
+        const newOpt = document.createElement('option');
+        newOpt.value = planParam;
+        newOpt.textContent = planParam;
+        newOpt.selected = true;
+        selectEl.insertBefore(newOpt, selectEl.firstChild);
+        selectEl.value = planParam;
+      }
+    }
   }
 }
 

@@ -264,5 +264,59 @@ const API = {
     const queryString = params.toString();
     const query = queryString ? `?${queryString}` : '';
     return await this.request(`/logs${query}`);
+  },
+
+  // Subscription CRUD
+  async getSubscriptions(admin = false) {
+    return await this.request(`/subscriptions?admin=${admin}`);
+  },
+
+  async getSubscription(id) {
+    return await this.request(`/subscriptions/${id}`);
+  },
+
+  async createSubscription(data) {
+    return await this.request('/subscriptions', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async updateSubscription(id, data) {
+    return await this.request(`/subscriptions/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async deleteSubscription(id) {
+    return await this.request(`/subscriptions/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
+  // Subscription Requests CRUD
+  async submitSubscriptionRequest(data) {
+    return await this.request('/subscription-requests', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async getSubscriptionRequests() {
+    return await this.request('/subscription-requests');
+  },
+
+  async updateSubscriptionRequest(id, status, closedBy = '') {
+    return await this.request(`/subscription-requests/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ status, closedBy })
+    });
+  },
+
+  async deleteSubscriptionRequest(id) {
+    return await this.request(`/subscription-requests/${id}`, {
+      method: 'DELETE'
+    });
   }
 };

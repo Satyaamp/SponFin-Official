@@ -25,9 +25,11 @@
       <ul class="sidebar-menu">
         <li class="sidebar-item active" data-tab="dashboard">Dashboard</li>
         <li class="sidebar-item" data-tab="services">Services</li>
+        <li class="sidebar-item" data-tab="subscriptions">Subscription Plans</li>
         <li class="sidebar-item" data-tab="projects">Projects</li>
         <li class="sidebar-item" data-tab="blogs">Blogs</li>
         <li class="sidebar-item" data-tab="leads">Leads</li>
+        <li class="sidebar-item" data-tab="subscription-requests">Subscription Requests</li>
         <li class="sidebar-item" data-tab="settings">Settings</li>
         <li class="sidebar-item" data-tab="users">Users</li>
         <li class="sidebar-item" data-tab="permissions">Role Access</li>
@@ -128,6 +130,34 @@
           </table>
         </div>
         <div id="pagination-services" class="pagination"
+          style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 12px 16px; background: #ffffff; border: 1px solid var(--border-color); border-top: none; border-bottom-left-radius: 6px; border-bottom-right-radius: 6px;">
+        </div>
+      </div>
+
+      <!-- 2.5 PANEL: SUBSCRIPTIONS -->
+      <div class="tab-panel" id="panel-subscriptions">
+        <div class="panel-header">
+          <h2>Subscription Plans</h2>
+          <button class="btn-admin btn-admin-primary" id="btn-add-subscription">Add Plan</button>
+        </div>
+        <div class="table-wrapper"
+          style="margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Plan Title</th>
+                <th>Price / Value</th>
+                <th>Order</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="subscriptions-table">
+              <!-- Rendered Dynamically -->
+            </tbody>
+          </table>
+        </div>
+        <div id="pagination-subscriptions" class="pagination"
           style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 12px 16px; background: #ffffff; border: 1px solid var(--border-color); border-top: none; border-bottom-left-radius: 6px; border-bottom-right-radius: 6px;">
         </div>
       </div>
@@ -303,6 +333,128 @@
                   style="font-weight: 600; font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px; text-transform: uppercase;">Closed
                   By (Digital Signature)</label>
                 <div id="detail-lead-closed-by" style="font-size: 14px; font-weight: 600; color: var(--success-color);">
+                  -</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5.5 PANEL: SUBSCRIPTION REQUESTS -->
+      <div class="tab-panel" id="panel-subscription-requests">
+        <div class="panel-header">
+          <h2>Subscription Requests</h2>
+          <div style="position: relative; display: inline-block;">
+            <button class="btn-admin btn-admin-primary" id="btn-export-sub-requests"
+              onclick="toggleSubRequestsExportDropdown(event)">
+              <i class="fas fa-download"></i> Export Requests <i class="fas fa-chevron-down"
+                style="font-size: 10px; margin-left: 4px;"></i>
+            </button>
+            <div id="sub-requests-export-dropdown-content"
+              style="display: none; position: absolute; right: 0; background-color: #ffffff; min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.15); border: 1px solid var(--border-color); border-radius: 4px; z-index: 50; margin-top: 4px;">
+              <a href="#" onclick="exportSubRequests('excel', event)"
+                style="color: var(--text-main); padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; border-bottom: 1px solid #f3f4f6; cursor: pointer;"><i
+                  class="fas fa-file-excel" style="color: #107c41; margin-right: 8px;"></i> Export to Excel</a>
+              <a href="#" onclick="exportSubRequests('pdf', event)"
+                style="color: var(--text-main); padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer;"><i
+                  class="fas fa-file-pdf" style="color: #e81123; margin-right: 8px;"></i> Export to PDF</a>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 24px; align-items: start; flex-wrap: wrap;">
+          <!-- Table Grid -->
+          <div style="flex: 2; min-width: 600px; display: flex; flex-direction: column;">
+            <div class="table-wrapper"
+              style="margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; width: 100%;">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Contact</th>
+                    <th>Company</th>
+                    <th>Selected Plan</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="subscription-requests-table">
+                  <!-- Rendered Dynamically -->
+                </tbody>
+              </table>
+            </div>
+            <div id="pagination-subscription-requests" class="pagination"
+              style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 12px 16px; background: #ffffff; border: 1px solid var(--border-color); border-top: none; border-bottom-left-radius: 6px; border-bottom-right-radius: 6px;">
+            </div>
+          </div>
+
+          <!-- CRM Side Details Panel -->
+          <div id="subscription-request-details-pane"
+            style="flex: 1; min-width: 320px; background: #ffffff; border: 1px solid var(--border-color); border-radius: 6px; padding: 24px; display: none; box-shadow: var(--shadow-sm);">
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+              <h3 style="font-size: 1.1rem; font-weight: 600;">Request Information</h3>
+              <button type="button" onclick="closeSubscriptionRequestDetails()"
+                style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <div>
+                <label
+                  style="font-weight: 600; font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px; text-transform: uppercase;">Full
+                  Name</label>
+                <div id="detail-sub-name" style="font-size: 14px; font-weight: 600;">-</div>
+              </div>
+              <div>
+                <label
+                  style="font-weight: 600; font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px; text-transform: uppercase;">Email
+                  Address</label>
+                <div id="detail-sub-email" style="font-size: 14px;">-</div>
+              </div>
+              <div>
+                <label
+                  style="font-weight: 600; font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px; text-transform: uppercase;">Phone
+                  Number</label>
+                <div id="detail-sub-phone" style="font-size: 14px;">-</div>
+              </div>
+              <div>
+                <label
+                  style="font-weight: 600; font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px; text-transform: uppercase;">Company
+                  Name</label>
+                <div id="detail-sub-company" style="font-size: 14px;">-</div>
+              </div>
+              <div>
+                <label
+                  style="font-weight: 600; font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px; text-transform: uppercase;">Selected
+                  Plan</label>
+                <div id="detail-sub-plan" style="font-size: 14px; font-weight: 600; color: var(--primary-color);">-
+                </div>
+              </div>
+              <div>
+                <label
+                  style="font-weight: 600; font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px; text-transform: uppercase;">Message
+                  Text</label>
+                <div id="detail-sub-message"
+                  style="font-size: 13px; line-height: 1.5; background: #f9fafb; border: 1px solid var(--border-color); border-radius: 4px; padding: 12px; white-space: pre-wrap; max-height: 200px; overflow-y: auto;">
+                  -</div>
+              </div>
+              <div>
+                <label
+                  style="font-weight: 600; font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px; text-transform: uppercase;">Date
+                  Received</label>
+                <div id="detail-sub-date" style="font-size: 13px;">-</div>
+              </div>
+              <div>
+                <label
+                  style="font-weight: 600; font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px; text-transform: uppercase;">Inquiry
+                  Status</label>
+                <div id="detail-sub-status-wrapper" style="margin-top: 4px;">
+                  <span id="detail-sub-status" class="status-badge new">New</span>
+                </div>
+              </div>
+              <div id="detail-sub-closed-by-container" style="display: none;">
+                <label
+                  style="font-weight: 600; font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px; text-transform: uppercase;">Closed
+                  By (Digital Signature)</label>
+                <div id="detail-sub-closed-by" style="font-size: 14px; font-weight: 600; color: var(--success-color);">
                   -</div>
               </div>
             </div>
@@ -524,18 +676,18 @@
         </div>
         <div class="table-controls" style="border-top-left-radius: 6px; border-top-right-radius: 6px;">
           <div class="search-filter">
-            <label for="filter-logs-from"
-              style="font-weight: 600; font-size: 13px; color: var(--text-muted); margin-right: 4px;">From:</label>
-            <input type="date" id="filter-logs-from"
-              style="padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 13px; outline: none; margin-right: 12px;">
-            <label for="filter-logs-to"
-              style="font-weight: 600; font-size: 13px; color: var(--text-muted); margin-right: 4px;">To:</label>
-            <input type="date" id="filter-logs-to"
-              style="padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 13px; outline: none; margin-right: 16px;">
-            <button class="btn-admin btn-admin-primary btn-admin-sm" id="btn-filter-logs"
-              style="padding: 6px 12px;">Fetch Logs</button>
-            <button class="btn-admin btn-admin-secondary btn-admin-sm" id="btn-reset-logs"
-              style="padding: 6px 12px; margin-left: 8px;">Reset</button>
+            <div class="filter-group">
+              <label for="filter-logs-from">From:</label>
+              <input type="date" id="filter-logs-from">
+            </div>
+            <div class="filter-group">
+              <label for="filter-logs-to">To:</label>
+              <input type="date" id="filter-logs-to">
+            </div>
+            <div class="filter-actions">
+              <button class="btn-admin btn-admin-primary btn-admin-sm" id="btn-filter-logs">Fetch Logs</button>
+              <button class="btn-admin btn-admin-secondary btn-admin-sm" id="btn-reset-logs">Reset</button>
+            </div>
           </div>
           <div id="logs-info-msg" style="font-size: 12px; color: var(--text-muted); font-weight: 500;">
             Showing last 100 logs by default.
@@ -620,6 +772,66 @@
         <div class="modal-footer">
           <button type="button" class="btn-admin btn-admin-secondary btn-cancel">Cancel</button>
           <button type="submit" class="btn-admin btn-admin-primary">Save Service</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+  MODAL: SUBSCRIPTION FORM
+  ========================================== -->
+  <div class="modal-backdrop" id="modal-subscription">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-subscription-title">Add Subscription Plan</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <form id="form-subscription">
+        <div class="modal-body">
+          <input type="hidden" id="subscription-id">
+
+          <div class="admin-form-group">
+            <label for="subscription-title">Plan Title *</label>
+            <input type="text" id="subscription-title" required placeholder="e.g. Growth Plan">
+          </div>
+
+          <div class="admin-form-group">
+            <label for="subscription-price">Price / Value *</label>
+            <input type="text" id="subscription-price" required placeholder="e.g. ₹10,000 (One-Time) or Custom Pricing">
+          </div>
+
+          <div class="admin-form-group">
+            <label for="subscription-desc">Ideal For / Description</label>
+            <textarea id="subscription-desc"
+              placeholder="e.g. Ideal For: Businesses that want to improve their online visibility..."></textarea>
+          </div>
+
+          <div class="admin-form-group">
+            <label for="subscription-objective">Objective / Pricing Note</label>
+            <textarea id="subscription-objective"
+              placeholder="e.g. Objective: Help businesses strengthen their online presence..."></textarea>
+          </div>
+
+          <div class="admin-form-group">
+            <label for="subscription-features">Plan Features (One feature per line)</label>
+            <textarea id="subscription-features" rows="6"
+              placeholder="Digital presence improvement&#10;Basic business profile optimization&#10;Social media growth support"></textarea>
+          </div>
+
+          <div class="admin-form-row">
+            <div class="admin-form-group">
+              <label for="subscription-order">Display Sequence Order</label>
+              <input type="number" id="subscription-order" value="0" min="0">
+            </div>
+            <div class="admin-form-group checkbox-group" style="margin-top: 24px;">
+              <input type="checkbox" id="subscription-active" checked>
+              <label for="subscription-active">Plan is Active</label>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-admin btn-admin-secondary btn-cancel">Cancel</button>
+          <button type="submit" class="btn-admin btn-admin-primary">Save Plan</button>
         </div>
       </form>
     </div>

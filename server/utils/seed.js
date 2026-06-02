@@ -203,6 +203,63 @@ const seedData = async () => {
       console.log('Blogs already exist. Skipping blogs seed.');
     }
 
+    // 6. Seed Subscription Plans if empty
+    const SubscriptionPlan = require('../models/SubscriptionPlan');
+    const planCount = await SubscriptionPlan.countDocuments();
+    if (planCount === 0) {
+      console.log('Seeding initial subscription plans...');
+      await SubscriptionPlan.create([
+        {
+          title: 'Growth Plan',
+          price: '₹10,000 (One-Time Payment)',
+          description: 'Ideal For: Businesses that want to improve their online visibility and attract more potential customers.',
+          features: 'Digital presence improvement\nBasic business profile optimization\nSocial media growth support\nLead-generation focused campaigns\nBrand visibility enhancement\nConsultation and growth recommendations',
+          objective: 'Objective: Help businesses strengthen their online presence and create more opportunities for customer acquisition.',
+          displayOrder: 1,
+          isActive: true
+        },
+        {
+          title: 'Business Growth Plan',
+          price: '₹50,000 (One-Time Payment)',
+          description: 'Ideal For: Businesses that need a professional website along with digital growth support.',
+          features: 'Professional business website\nMobile-responsive design\nModern user interface\nSEO-friendly website structure\nDigital marketing support\nOnline presence management\nLead generation strategy\nBasic analytics integration',
+          objective: 'Objective: Establish a strong digital foundation and improve customer trust through a professional online presence.',
+          displayOrder: 2,
+          isActive: true
+        },
+        {
+          title: 'Premium Brand Plan',
+          price: '₹1,00,000 (One-Time Payment)',
+          description: 'Ideal For: Businesses looking for a complete digital ecosystem.',
+          features: 'Professional website development\nCustom mobile application\nDigital marketing services\nOnline branding support\nGrowth-focused strategy implementation\nEnhanced customer engagement systems\nBusiness consultation and digital planning',
+          objective: 'Objective: Transform your business into a scalable digital brand with both web and mobile presence.',
+          displayOrder: 3,
+          isActive: true
+        },
+        {
+          title: 'Enterprise Growth Plan',
+          price: 'Custom Pricing',
+          description: 'Ideal For: Businesses seeking large-scale digital expansion and brand growth.',
+          features: 'Professional website\nMobile application\nDigital marketing services\nInfluencer marketing campaigns\nAdvanced branding strategy\nCustomized growth roadmap\nDedicated planning and consultation',
+          objective: 'Pricing Note: The final cost depends on project scope, campaign requirements, and influencer collaboration fees.',
+          displayOrder: 4,
+          isActive: true
+        },
+        {
+          title: 'Maintenance & Support Policy',
+          price: '₹4,000/month',
+          description: 'All subscription plans above are one-time payments for the initial development and service scope.',
+          features: 'Technical support\nBug fixes\nPerformance monitoring\nSecurity updates\nRoutine maintenance',
+          objective: 'Important: If new features, major functionality upgrades, or additional development work are requested, the cost will be quoted separately based on project requirements.',
+          displayOrder: 5,
+          isActive: true
+        }
+      ]);
+      console.log('Subscription plans seeded successfully.');
+    } else {
+      console.log('Subscription plans already exist. Skipping plans seed.');
+    }
+
     console.log('Database seeding completed successfully.');
     process.exit(0);
   } catch (error) {
