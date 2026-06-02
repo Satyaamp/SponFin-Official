@@ -96,6 +96,26 @@ app.get('/contact', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+app.get('/service/:id', async (req, res, next) => {
+  try {
+    if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.redirect('/services');
+    }
+    const Service = require('./server/models/Service');
+    const service = await Service.findById(req.params.id);
+    if (!service) {
+      return res.redirect('/services');
+    }
+    const html = await injectSEO(path.join(__dirname, 'client/pages/service-detail.html'), {
+      title: service.title,
+      description: service.shortDescription,
+      ogImage: service.imageUrl,
+      ogType: 'website'
+    }, req);
+    res.send(html);
+  } catch (err) { next(err); }
+});
+
 // Admin Panel routes
 app.get('/admin/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'client/pages/admin-login.html'));

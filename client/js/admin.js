@@ -447,7 +447,7 @@ function renderServicesTable() {
     return `
       <tr>
         <td><img src="${s.imageUrl}" alt="${s.title}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;"></td>
-        <td><strong>${escapeHTML(s.title)}</strong></td>
+        <td><a href="/service/${s._id}?view=admin" target="_blank" style="color: var(--primary-color); text-decoration: underline; font-weight: 600;">${escapeHTML(s.title)}</a></td>
         <td>${escapeHTML(s.shortDescription)}</td>
         <td>${s.displayOrder}</td>
         <td><span class="status-badge active-${s.isActive}">${s.isActive ? 'Active' : 'Draft'}</span></td>

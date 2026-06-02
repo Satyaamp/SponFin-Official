@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     loadHomeContent();
   } else if (path.includes('/about')) {
     loadAboutContent();
+  } else if (path.includes('/service-detail') || (path.startsWith('/service/') && path.split('/').length > 2)) {
+    loadServiceDetailPageContent();
   } else if (path.includes('/services')) {
     loadServicesPageContent();
   } else if (path.includes('/portfolio')) {
@@ -207,13 +209,15 @@ async function loadServicesGrid(selector, limit = null) {
       }
 
       container.innerHTML = services.map(s => `
-        <div class="service-card">
-          <div class="service-icon">
-            <img src="${s.imageUrl}" alt="${s.title}" class="service-thumb">
+        <a href="/service/${s._id}" target="_blank" class="service-card-link">
+          <div class="service-card">
+            <div class="service-icon">
+              <img src="${s.imageUrl}" alt="${s.title}" class="service-thumb">
+            </div>
+            <h3>${s.title}</h3>
+            <p>${s.shortDescription}</p>
           </div>
-          <h3>${s.title}</h3>
-          <p>${s.shortDescription}</p>
-        </div>
+        </a>
       `).join('');
 
       // Attach image fallback handler to all service thumbs
@@ -435,6 +439,137 @@ async function loadBlogDetailPageContent() {
   } catch (error) {
     console.error('Error loading blog details:', error);
     container.innerHTML = `<h2>Error</h2><p>Failed to load the article.</p><a href="/blog">&larr; Back to Blogs</a>`;
+  }
+}
+
+// 8.5 SERVICE DETAIL PAGE RENDERING
+async function loadServiceDetailPageContent() {
+  const container = document.querySelector('.service-detail-container');
+  if (!container) return;
+
+  const pathParts = window.location.pathname.split('/');
+  const id = pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2];
+
+  if (!id || id === 'service' || id === 'service-detail.html' || !id.match(/^[0-9a-fA-F]{24}$/)) {
+    window.location.href = '/services';
+    return;
+  }
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const isAdminView = urlParams.get('view') === 'admin';
+  if (isAdminView) {
+    document.body.classList.add('admin-preview-mode');
+    
+    // Hide public elements
+    const publicHeader = document.querySelector('header');
+    if (publicHeader) publicHeader.style.display = 'none';
+    
+    const publicFooter = document.querySelector('footer');
+    if (publicFooter) publicFooter.style.display = 'none';
+    
+    document.querySelectorAll('.blur-circle').forEach(el => el.style.display = 'none');
+  }
+
+  try {
+    const response = await API.getService(id);
+    if (response.success && response.data) {
+      const s = response.data;
+      
+      // Update DOM
+      document.getElementById('service-title').textContent = s.title;
+      
+      const featImg = document.getElementById('service-featured-image');
+      if (featImg) {
+        featImg.src = s.imageUrl;
+        handleImageFallback(featImg, s.title);
+      }
+
+      // Convert newlines in plain text to HTML paragraphs and line breaks
+      const formattedDescription = s.description
+        .split(/\n\s*\n/)
+        .map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`)
+        .join('');
+        
+      document.getElementById('service-content-body').innerHTML = formattedDescription;
+
+      if (isAdminView) {
+        // Customize back button for close tab
+        const backLink = document.getElementById('service-back-link');
+        if (backLink) {
+          backLink.innerHTML = '<i class="fas fa-times"></i> Close Preview';
+          backLink.href = '#';
+          backLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.close();
+          });
+        }
+        
+        // Hide recommendations completely
+        const recSection = document.querySelector('.service-recommendations');
+        if (recSection) recSection.style.display = 'none';
+      } else {
+        // Recommendations logic (show 1-2 random other active services)
+        loadServiceRecommendations(s._id);
+      }
+    } else {
+      container.innerHTML = `<h2>Service Not Found</h2><p>The requested service does not exist or has been removed.</p><a href="/services">&larr; Back to Services</a>`;
+    }
+  } catch (error) {
+    console.error('Error loading service details:', error);
+    container.innerHTML = `<h2>Error</h2><p>Failed to load the service details.</p><a href="/services">&larr; Back to Services</a>`;
+  }
+}
+
+// Helper to load other active services randomly
+async function loadServiceRecommendations(currentServiceId) {
+  const recContainer = document.getElementById('random-services-grid');
+  if (!recContainer) return;
+
+  try {
+    const response = await API.getServices();
+    if (response.success && response.data && response.data.length > 0) {
+      // Filter out current service
+      let otherServices = response.data.filter(s => s._id !== currentServiceId && s.isActive);
+      
+      if (otherServices.length === 0) {
+        const recommendationsSection = document.querySelector('.service-recommendations');
+        if (recommendationsSection) recommendationsSection.style.display = 'none';
+        return;
+      }
+
+      // Shuffle otherServices
+      for (let i = otherServices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [otherServices[i], otherServices[j]] = [otherServices[j], otherServices[i]];
+      }
+
+      // Pick 1 or 2 random services
+      const limit = Math.min(otherServices.length, Math.floor(Math.random() * 2) + 1); // 1 or 2
+      const chosenServices = otherServices.slice(0, limit);
+
+      recContainer.innerHTML = chosenServices.map(s => `
+        <a href="/service/${s._id}" target="_blank" class="service-card-link">
+          <div class="service-card">
+            <div class="service-icon">
+              <img src="${s.imageUrl}" alt="${s.title}" class="service-thumb">
+            </div>
+            <h3>${s.title}</h3>
+            <p>${s.shortDescription}</p>
+          </div>
+        </a>
+      `).join('');
+
+      // Attach image fallback handler to recommended service thumbs
+      recContainer.querySelectorAll('.service-thumb').forEach(img => {
+        handleImageFallback(img, 'Service');
+      });
+    } else {
+      const recommendationsSection = document.querySelector('.service-recommendations');
+      if (recommendationsSection) recommendationsSection.style.display = 'none';
+    }
+  } catch (error) {
+    console.error('Error loading service recommendations:', error);
+    recContainer.innerHTML = '';
   }
 }
 
