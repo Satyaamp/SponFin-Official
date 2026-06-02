@@ -1,5 +1,13 @@
 const User = require('../models/User');
+const Permission = require('../models/Permission');
 const { logActivity } = require('../utils/logger');
+
+const hasPermission = async (user, moduleName, action) => {
+  if (user.role === 'super_admin') return true;
+  const perm = await Permission.findOne({ role: user.role });
+  if (!perm) return false;
+  return perm[moduleName] && perm[moduleName][action] === true;
+};
 
 // @desc    Get all users
 // @route   GET /api/users
@@ -77,26 +85,27 @@ exports.updateUser = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Ensure permissions: super_admin can edit anyone; others can only edit their own details
-    if (req.user.role !== 'super_admin' && req.user._id.toString() !== req.params.id) {
+    // Ensure permissions: can edit anyone if update users permission is granted; others can only edit their own details
+    const canUpdateOthers = await hasPermission(req.user, 'users', 'update');
+    if (!canUpdateOthers && req.user._id.toString() !== req.params.id) {
       return res.status(403).json({ success: false, message: 'Not authorized to update this user' });
     }
 
     const { name, email, password, role, isActive } = req.body;
 
-    // Only super_admin can change role or isActive status
-    if (req.user.role !== 'super_admin') {
+    // Validate role/isActive changes: only users with user update permissions can change other people's roles/status
+    if (req.user._id.toString() === req.params.id) {
       if (role !== undefined && role !== user.role) {
-        return res.status(403).json({ success: false, message: 'Only Super Admins can update roles' });
+        return res.status(403).json({ success: false, message: 'Not authorized to change your own role' });
       }
       if (isActive !== undefined && isActive !== user.isActive) {
-        return res.status(403).json({ success: false, message: 'Only Super Admins can activate/deactivate accounts' });
+        return res.status(403).json({ success: false, message: 'Not authorized to change your own status' });
       }
     }
 
     if (name) user.name = name;
     if (email) user.email = email;
-    if (role && req.user.role === 'super_admin') {
+    if (role && (req.user.role === 'super_admin' || canUpdateOthers)) {
       if (role !== user.role) {
         const newRoleDate = new Date();
         
@@ -121,8 +130,8 @@ exports.updateUser = async (req, res, next) => {
         });
       }
     }
-    if (isActive !== undefined && req.user.role === 'super_admin') {
-      // Prevent super_admin from deactivating themselves
+    if (isActive !== undefined && (req.user.role === 'super_admin' || canUpdateOthers)) {
+      // Prevent deactivating themselves
       if (req.user._id.toString() === req.params.id && isActive === false) {
         return res.status(400).json({ success: false, message: 'You cannot deactivate your own account' });
       }

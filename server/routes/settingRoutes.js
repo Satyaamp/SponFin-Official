@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const { getSettings, updateSettings } = require('../controllers/settingController');
-const { verifyToken, checkRole } = require('../middleware/authMiddleware');
+const { verifyToken, checkPermission } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 
 router.route('/')
   .get(getSettings)
   .put(
     verifyToken, 
-    checkRole(['super_admin', 'admin', 'editor']), 
+    checkPermission('settings', 'update'), 
     upload.fields([
       { name: 'logo', maxCount: 1 },
       { name: 'heroImage', maxCount: 1 },

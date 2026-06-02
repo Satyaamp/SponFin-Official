@@ -6,14 +6,14 @@ const {
   updateUser,
   deleteUser
 } = require('../controllers/userController');
-const { verifyToken, checkRole } = require('../middleware/authMiddleware');
+const { verifyToken, checkPermission } = require('../middleware/authMiddleware');
 
 router.route('/')
-  .get(verifyToken, checkRole(['super_admin', 'admin', 'editor']), getUsers)
-  .post(verifyToken, checkRole(['super_admin']), createUser);
+  .get(verifyToken, checkPermission('users', 'read'), getUsers)
+  .post(verifyToken, checkPermission('users', 'create'), createUser);
 
 router.route('/:id')
-  .put(verifyToken, updateUser) // specific self-update logic checked in controller
-  .delete(verifyToken, checkRole(['super_admin']), deleteUser);
+  .put(verifyToken, updateUser) // self-service details update checks inside controller
+  .delete(verifyToken, checkPermission('users', 'delete'), deleteUser);
 
 module.exports = router;

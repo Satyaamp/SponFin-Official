@@ -6,14 +6,14 @@ const {
   updateSubscriptionRequest,
   deleteSubscriptionRequest
 } = require('../controllers/subscriptionRequestController');
-const { verifyToken, checkRole } = require('../middleware/authMiddleware');
+const { verifyToken, checkPermission } = require('../middleware/authMiddleware');
 
 router.route('/')
   .post(createSubscriptionRequest)
-  .get(verifyToken, checkRole(['super_admin', 'admin', 'editor']), getSubscriptionRequests);
+  .get(verifyToken, checkPermission('subscriptionRequests', 'read'), getSubscriptionRequests);
 
 router.route('/:id')
-  .put(verifyToken, checkRole(['super_admin', 'admin', 'editor']), updateSubscriptionRequest)
-  .delete(verifyToken, checkRole(['super_admin', 'admin']), deleteSubscriptionRequest);
+  .put(verifyToken, checkPermission('subscriptionRequests', 'update'), updateSubscriptionRequest)
+  .delete(verifyToken, checkPermission('subscriptionRequests', 'delete'), deleteSubscriptionRequest);
 
 module.exports = router;

@@ -7,16 +7,16 @@ const {
   updateService,
   deleteService
 } = require('../controllers/serviceController');
-const { verifyToken, checkRole } = require('../middleware/authMiddleware');
+const { verifyToken, checkPermission } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 
 router.route('/')
   .get(getServices)
-  .post(verifyToken, checkRole(['super_admin', 'admin', 'editor']), upload.single('image'), createService);
+  .post(verifyToken, checkPermission('services', 'create'), upload.single('image'), createService);
 
 router.route('/:id')
   .get(getService)
-  .put(verifyToken, checkRole(['super_admin', 'admin', 'editor']), upload.single('image'), updateService)
-  .delete(verifyToken, checkRole(['super_admin', 'admin']), deleteService);
+  .put(verifyToken, checkPermission('services', 'update'), upload.single('image'), updateService)
+  .delete(verifyToken, checkPermission('services', 'delete'), deleteService);
 
 module.exports = router;

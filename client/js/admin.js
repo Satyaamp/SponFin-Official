@@ -63,6 +63,26 @@ function initLoginFlow() {
 // 2. DASHBOARD FLOW & GLOBAL NAVIGATION
 // ==========================================
 let currentUser = null;
+let permissionsDataList = [];
+
+function hasRolePermission(moduleName, action) {
+  if (!currentUser) return false;
+  if (currentUser.role === 'super_admin') return true;
+
+  // Find permission record for currentUser.role
+  const perm = permissionsDataList.find(p => p.role === currentUser.role);
+  if (!perm) {
+    // Fallback: if permissions not loaded yet, return default static checks
+    if (currentUser.role === 'editor') {
+      if (action === 'delete') return false;
+      if (moduleName === 'leads' || moduleName === 'subscriptionRequests' || moduleName === 'users') return false;
+    }
+    return true;
+  }
+
+  const modulePermObj = perm[moduleName];
+  return modulePermObj ? modulePermObj[action] === true : false;
+}
 
 // Pagination configuration and state variables
 const PAGE_SIZE = 10;
@@ -95,6 +115,16 @@ async function initDashboardFlow() {
     currentUser = API.getUser();
   }
 
+  // Fetch permissions from database
+  try {
+    const res = await API.getPermissions();
+    if (res.success && res.data) {
+      permissionsDataList = res.data;
+    }
+  } catch (err) {
+    console.error('Failed to load role permissions on startup:', err);
+  }
+
   if (!currentUser) {
     window.location.href = '/admin/login';
     return;
@@ -108,23 +138,43 @@ async function initDashboardFlow() {
     userRoleEl.className = `user-badge ${currentUser.role}`;
   }
 
-  // Hide Leads sidebar item for editor level
+  // Hide Leads sidebar item based on dynamic permission
   const leadsSidebarItem = document.querySelector('.sidebar-item[data-tab="leads"]');
   if (leadsSidebarItem) {
-    if (currentUser.role === 'editor') {
+    if (!hasRolePermission('leads', 'read')) {
       leadsSidebarItem.style.display = 'none';
     } else {
       leadsSidebarItem.style.display = 'inline-flex';
     }
   }
 
-  // Hide Subscription Requests sidebar item for editor level
+  // Hide Subscription Requests sidebar item based on dynamic permission
   const subRequestsSidebarItem = document.querySelector('.sidebar-item[data-tab="subscription-requests"]');
   if (subRequestsSidebarItem) {
-    if (currentUser.role === 'editor') {
+    if (!hasRolePermission('subscriptionRequests', 'read')) {
       subRequestsSidebarItem.style.display = 'none';
     } else {
       subRequestsSidebarItem.style.display = 'inline-flex';
+    }
+  }
+
+  // Hide Subscriptions configuration sidebar item based on dynamic permission
+  const subPlansSidebarItem = document.querySelector('.sidebar-item[data-tab="subscriptions"]');
+  if (subPlansSidebarItem) {
+    if (!hasRolePermission('subscriptions', 'read')) {
+      subPlansSidebarItem.style.display = 'none';
+    } else {
+      subPlansSidebarItem.style.display = 'inline-flex';
+    }
+  }
+
+  // Hide Users sidebar item based on dynamic permission
+  const usersSidebarItem = document.querySelector('.sidebar-item[data-tab="users"]');
+  if (usersSidebarItem) {
+    if (!hasRolePermission('users', 'read')) {
+      usersSidebarItem.style.display = 'none';
+    } else {
+      usersSidebarItem.style.display = 'inline-flex';
     }
   }
 
@@ -233,6 +283,16 @@ async function initDashboardFlow() {
 }
 
 async function triggerPanelLoad(tab) {
+  // Fetch permissions from database to keep synced
+  try {
+    const res = await API.getPermissions();
+    if (res.success && res.data) {
+      permissionsDataList = res.data;
+    }
+  } catch (err) {
+    console.error('Failed to sync role permissions on tab change:', err);
+  }
+
   if ((tab === 'logs' || tab === 'fwork') && currentUser && currentUser.role !== 'super_admin') {
     const dashboardMenuItem = document.querySelector('.sidebar-item[data-tab="dashboard"]');
     if (dashboardMenuItem) {
@@ -241,7 +301,32 @@ async function triggerPanelLoad(tab) {
     }
   }
 
-  if ((tab === 'leads' || tab === 'subscription-requests') && currentUser && currentUser.role === 'editor') {
+  // Check access permissions for leads, subscription-requests, subscriptions, users dynamically
+  if (tab === 'leads' && currentUser && !hasRolePermission('leads', 'read')) {
+    const dashboardMenuItem = document.querySelector('.sidebar-item[data-tab="dashboard"]');
+    if (dashboardMenuItem) {
+      dashboardMenuItem.click();
+      return;
+    }
+  }
+
+  if (tab === 'subscription-requests' && currentUser && !hasRolePermission('subscriptionRequests', 'read')) {
+    const dashboardMenuItem = document.querySelector('.sidebar-item[data-tab="dashboard"]');
+    if (dashboardMenuItem) {
+      dashboardMenuItem.click();
+      return;
+    }
+  }
+
+  if (tab === 'subscriptions' && currentUser && !hasRolePermission('subscriptions', 'read')) {
+    const dashboardMenuItem = document.querySelector('.sidebar-item[data-tab="dashboard"]');
+    if (dashboardMenuItem) {
+      dashboardMenuItem.click();
+      return;
+    }
+  }
+
+  if (tab === 'users' && currentUser && !hasRolePermission('users', 'read')) {
     const dashboardMenuItem = document.querySelector('.sidebar-item[data-tab="dashboard"]');
     if (dashboardMenuItem) {
       dashboardMenuItem.click();
@@ -267,7 +352,7 @@ async function triggerPanelLoad(tab) {
       // Dynamic sidebar item visibility
       const leadsSidebarItem = document.querySelector('.sidebar-item[data-tab="leads"]');
       if (leadsSidebarItem) {
-        if (currentUser.role === 'editor') {
+        if (!hasRolePermission('leads', 'read')) {
           leadsSidebarItem.style.display = 'none';
         } else {
           leadsSidebarItem.style.display = 'inline-flex';
@@ -276,10 +361,28 @@ async function triggerPanelLoad(tab) {
 
       const subRequestsSidebarItem = document.querySelector('.sidebar-item[data-tab="subscription-requests"]');
       if (subRequestsSidebarItem) {
-        if (currentUser.role === 'editor') {
+        if (!hasRolePermission('subscriptionRequests', 'read')) {
           subRequestsSidebarItem.style.display = 'none';
         } else {
           subRequestsSidebarItem.style.display = 'inline-flex';
+        }
+      }
+
+      const subPlansSidebarItem = document.querySelector('.sidebar-item[data-tab="subscriptions"]');
+      if (subPlansSidebarItem) {
+        if (!hasRolePermission('subscriptions', 'read')) {
+          subPlansSidebarItem.style.display = 'none';
+        } else {
+          subPlansSidebarItem.style.display = 'inline-flex';
+        }
+      }
+
+      const usersSidebarItem = document.querySelector('.sidebar-item[data-tab="users"]');
+      if (usersSidebarItem) {
+        if (!hasRolePermission('users', 'read')) {
+          usersSidebarItem.style.display = 'none';
+        } else {
+          usersSidebarItem.style.display = 'inline-flex';
         }
       }
 
@@ -303,8 +406,7 @@ async function triggerPanelLoad(tab) {
 
       // If the role changed, reload views
       if (oldRole && oldRole !== currentUser.role) {
-        if (currentUser.role === 'editor' && (tab === 'leads' || tab === 'subscription-requests')) {
-          // Redirect them to dashboard since they no longer have access to leads or subscription requests
+        if (!hasRolePermission(tab === 'subscription-requests' ? 'subscriptionRequests' : tab, 'read') && (tab === 'leads' || tab === 'subscription-requests' || tab === 'subscriptions' || tab === 'users')) {
           const dashboardMenuItem = document.querySelector('.sidebar-item[data-tab="dashboard"]');
           if (dashboardMenuItem) {
             dashboardMenuItem.click();
@@ -312,7 +414,6 @@ async function triggerPanelLoad(tab) {
           }
         }
         if (currentUser.role !== 'super_admin' && tab === 'logs') {
-          // Redirect them to dashboard since they no longer have access to logs
           const dashboardMenuItem = document.querySelector('.sidebar-item[data-tab="dashboard"]');
           if (dashboardMenuItem) {
             dashboardMenuItem.click();
@@ -320,7 +421,6 @@ async function triggerPanelLoad(tab) {
           }
         }
         if (currentUser.role !== 'super_admin' && tab === 'fwork') {
-          // Redirect them to dashboard since they no longer have access to fwork
           const dashboardMenuItem = document.querySelector('.sidebar-item[data-tab="dashboard"]');
           if (dashboardMenuItem) {
             dashboardMenuItem.click();
@@ -442,11 +542,16 @@ async function loadServicesManager() {
   const tableBody = document.getElementById('services-table');
   const addBtn = document.getElementById('btn-add-service');
 
-  // Bind Create button
+  // Bind Create button dynamically
   if (addBtn) {
-    addBtn.onclick = () => {
-      openServiceModal();
-    };
+    if (!hasRolePermission('services', 'create')) {
+      addBtn.style.display = 'none';
+    } else {
+      addBtn.style.display = 'inline-flex';
+      addBtn.onclick = () => {
+        openServiceModal();
+      };
+    }
   }
 
   try {
@@ -477,8 +582,10 @@ function renderServicesTable() {
   const paginatedData = servicesData.slice(start, end);
 
   tableBody.innerHTML = paginatedData.map(s => {
-    const showDelete = currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'admin');
+    const showDelete = hasRolePermission('services', 'delete');
     const deleteBtn = showDelete ? `<button class="btn-admin btn-admin-danger btn-admin-sm" onclick="deleteService('${s._id}')">Delete</button>` : '';
+    const showEdit = hasRolePermission('services', 'update');
+    const editBtn = showEdit ? `<button class="btn-admin btn-admin-secondary btn-admin-sm" onclick="openServiceModal('${s._id}')">Edit</button>` : '';
     return `
       <tr>
         <td><img src="${s.imageUrl}" alt="${s.title}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;"></td>
@@ -487,7 +594,7 @@ function renderServicesTable() {
         <td>${s.displayOrder}</td>
         <td><span class="status-badge active-${s.isActive}">${s.isActive ? 'Active' : 'Draft'}</span></td>
         <td>
-          <button class="btn-admin btn-admin-secondary btn-admin-sm" onclick="openServiceModal('${s._id}')">Edit</button>
+          ${editBtn}
           ${deleteBtn}
         </td>
       </tr>
@@ -589,11 +696,16 @@ async function loadSubscriptionsManager() {
   const tableBody = document.getElementById('subscriptions-table');
   const addBtn = document.getElementById('btn-add-subscription');
 
-  // Bind Create button
+  // Bind Create button dynamically
   if (addBtn) {
-    addBtn.onclick = () => {
-      openSubscriptionModal();
-    };
+    if (!hasRolePermission('subscriptions', 'create')) {
+      addBtn.style.display = 'none';
+    } else {
+      addBtn.style.display = 'inline-flex';
+      addBtn.onclick = () => {
+        openSubscriptionModal();
+      };
+    }
   }
 
   try {
@@ -624,8 +736,10 @@ function renderSubscriptionsTable() {
   const paginatedData = subscriptionsData.slice(start, end);
 
   tableBody.innerHTML = paginatedData.map(s => {
-    const showDelete = currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'admin');
+    const showDelete = hasRolePermission('subscriptions', 'delete');
     const deleteBtn = showDelete ? `<button class="btn-admin btn-admin-danger btn-admin-sm" onclick="deleteSubscription('${s._id}')">Delete</button>` : '';
+    const showEdit = hasRolePermission('subscriptions', 'update');
+    const editBtn = showEdit ? `<button class="btn-admin btn-admin-secondary btn-admin-sm" onclick="openSubscriptionModal('${s._id}')">Edit</button>` : '';
     return `
       <tr>
         <td><strong>${escapeHTML(s.title)}</strong></td>
@@ -633,7 +747,7 @@ function renderSubscriptionsTable() {
         <td>${s.displayOrder}</td>
         <td><span class="status-badge active-${s.isActive}">${s.isActive ? 'Active' : 'Draft'}</span></td>
         <td>
-          <button class="btn-admin btn-admin-secondary btn-admin-sm" onclick="openSubscriptionModal('${s._id}')">Edit</button>
+          ${editBtn}
           ${deleteBtn}
         </td>
       </tr>
@@ -726,7 +840,12 @@ let projectsData = [];
 async function loadProjectsManager() {
   const addBtn = document.getElementById('btn-add-project');
   if (addBtn) {
-    addBtn.onclick = () => openProjectModal();
+    if (!hasRolePermission('projects', 'create')) {
+      addBtn.style.display = 'none';
+    } else {
+      addBtn.style.display = 'inline-flex';
+      addBtn.onclick = () => openProjectModal();
+    }
   }
 
   try {
@@ -758,8 +877,10 @@ function renderProjectsTable() {
 
   tableBody.innerHTML = paginatedData.map(p => {
     const featImg = p.images && p.images.length > 0 ? p.images[0].imageUrl : '';
-    const showDelete = currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'admin');
+    const showDelete = hasRolePermission('projects', 'delete');
     const deleteBtn = showDelete ? `<button class="btn-admin btn-admin-danger btn-admin-sm" onclick="deleteProject('${p._id}')">Delete</button>` : '';
+    const showEdit = hasRolePermission('projects', 'update');
+    const editBtn = showEdit ? `<button class="btn-admin btn-admin-secondary btn-admin-sm" onclick="openProjectModal('${p._id}')">Edit</button>` : '';
     return `
       <tr>
         <td><img src="${featImg}" style="width: 50px; height: 35px; object-fit: cover; border-radius: 4px;"></td>
@@ -768,7 +889,7 @@ function renderProjectsTable() {
         <td>${p.technologies.slice(0, 3).join(', ')}${p.technologies.length > 3 ? '...' : ''}</td>
         <td>${p.featured ? 'Yes' : 'No'}</td>
         <td>
-          <button class="btn-admin btn-admin-secondary btn-admin-sm" onclick="openProjectModal('${p._id}')">Edit</button>
+          ${editBtn}
           ${deleteBtn}
         </td>
       </tr>
@@ -895,7 +1016,12 @@ let blogsData = [];
 async function loadBlogsManager() {
   const addBtn = document.getElementById('btn-add-blog');
   if (addBtn) {
-    addBtn.onclick = () => openBlogModal();
+    if (!hasRolePermission('blogs', 'create')) {
+      addBtn.style.display = 'none';
+    } else {
+      addBtn.style.display = 'inline-flex';
+      addBtn.onclick = () => openBlogModal();
+    }
   }
 
   // Initialize Rich Text Toolbar buttons
@@ -930,8 +1056,10 @@ function renderBlogsTable() {
 
   tableBody.innerHTML = paginatedData.map(b => {
     const authorName = b.author ? b.author.name : 'SponFin Editor';
-    const showDelete = currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'admin');
+    const showDelete = hasRolePermission('blogs', 'delete');
     const deleteBtn = showDelete ? `<button class="btn-admin btn-admin-danger btn-admin-sm" onclick="deleteBlog('${b._id}')">Delete</button>` : '';
+    const showEdit = hasRolePermission('blogs', 'update');
+    const editBtn = showEdit ? `<button class="btn-admin btn-admin-secondary btn-admin-sm" onclick="openBlogModal('${b._id}')">Edit</button>` : '';
     return `
       <tr>
         <td><img src="${b.featuredImage}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;"></td>
@@ -940,7 +1068,7 @@ function renderBlogsTable() {
         <td><span class="status-badge ${b.status}">${b.status}</span></td>
         <td>${formatDateOnly(b.createdAt)}</td>
         <td>
-          <button class="btn-admin btn-admin-secondary btn-admin-sm" onclick="openBlogModal('${b._id}')">Edit</button>
+          ${editBtn}
           ${deleteBtn}
         </td>
       </tr>
@@ -1112,8 +1240,10 @@ function renderLeadsTable() {
 
   tableBody.innerHTML = paginatedData.map(l => {
     const isActive = l._id === activeLeadId;
-    const showDelete = currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'admin');
+    const showDelete = hasRolePermission('leads', 'delete');
     const deleteBtn = showDelete ? `<button class="btn-admin btn-admin-danger btn-admin-sm" onclick="deleteLead('${l._id}')">Delete</button>` : '';
+    const canUpdateStatus = hasRolePermission('leads', 'update');
+    
     return `
       <tr class="${isActive ? 'active-row' : ''}">
         <td><strong>${escapeHTML(l.name)}</strong></td>
@@ -1124,7 +1254,7 @@ function renderLeadsTable() {
         <td>${escapeHTML(l.company || 'N/A')}</td>
         <td><span class="status-badge admin">${escapeHTML(l.service)}</span></td>
         <td>
-          <select data-prev="${l.status}" onchange="handleLeadStatusSelectChange('${l._id}', this)" style="padding: 4px; border: 1px solid var(--border-color); border-radius: 4px; font-size:12px; display: block; margin-bottom: 2px;" ${l.status === 'closed' ? 'disabled' : ''}>
+          <select data-prev="${l.status}" onchange="handleLeadStatusSelectChange('${l._id}', this)" style="padding: 4px; border: 1px solid var(--border-color); border-radius: 4px; font-size:12px; display: block; margin-bottom: 2px;" ${(l.status === 'closed' || !canUpdateStatus) ? 'disabled' : ''}>
             <option value="new" ${l.status === 'new' ? 'selected' : ''}>New</option>
             <option value="contacted" ${l.status === 'contacted' ? 'selected' : ''}>Contacted</option>
             <option value="closed" ${l.status === 'closed' ? 'selected' : ''}>Closed</option>
@@ -1425,8 +1555,7 @@ let usersData = [];
 async function loadUsersManager() {
   const addBtn = document.getElementById('btn-add-user');
   if (addBtn) {
-    // Only display User addition for super_admin
-    if (currentUser.role !== 'super_admin') {
+    if (!hasRolePermission('users', 'create')) {
       addBtn.style.display = 'none';
     } else {
       addBtn.style.display = 'inline-flex';
@@ -1454,10 +1583,10 @@ function renderUsersTable() {
   if (!tableBody) return;
 
   const tableHeader = tableBody.closest('table').querySelector('thead');
-  const isEditor = currentUser && currentUser.role === 'editor';
+  const hideStatusCol = !hasRolePermission('users', 'delete');
 
   if (tableHeader) {
-    if (isEditor) {
+    if (hideStatusCol) {
       tableHeader.innerHTML = `
         <tr>
           <th>Username</th>
@@ -1481,7 +1610,7 @@ function renderUsersTable() {
 
   const totalCount = usersData.length;
   if (totalCount === 0) {
-    tableBody.innerHTML = `<tr><td colspan="${isEditor ? 4 : 5}" style="text-align:center;">No users registered.</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="${hideStatusCol ? 4 : 5}" style="text-align:center;">No users registered.</td></tr>`;
     renderPagination('users', 0, 1);
     return;
   }
@@ -1492,8 +1621,8 @@ function renderUsersTable() {
 
   tableBody.innerHTML = paginatedData.map(u => {
     const isSelf = u._id === (currentUser.id || currentUser._id);
-    const canEdit = currentUser.role === 'super_admin' || isSelf;
-    const canDelete = currentUser.role === 'super_admin' && !isSelf;
+    const canEdit = hasRolePermission('users', 'update') || isSelf;
+    const canDelete = hasRolePermission('users', 'delete') && !isSelf;
 
     const editBtn = canEdit
       ? `<button class="btn-admin btn-admin-secondary btn-admin-sm" onclick="openUserModal('${u._id}')">Edit</button>`
@@ -1502,7 +1631,7 @@ function renderUsersTable() {
       ? `<button class="btn-admin btn-admin-danger btn-admin-sm" onclick="deleteUser('${u._id}')">Delete</button>`
       : '';
 
-    if (isEditor) {
+    if (hideStatusCol) {
       return `
         <tr>
           <td><strong>${escapeHTML(u.name)}</strong> ${isSelf ? '<span style="color:var(--text-muted);font-size:11px;">(You)</span>' : ''}</td>
@@ -1561,8 +1690,8 @@ function openUserModal(id = null) {
     roleSelect.disabled = true;
     activeCheckbox.disabled = true;
   } else {
-    // If not editing self, lock components if current user is not super_admin
-    if (currentUser.role !== 'super_admin') {
+    // If not editing self, lock components if current user doesn't have update users permission
+    if (!hasRolePermission('users', 'update')) {
       nameInput.disabled = true;
       emailInput.disabled = true;
       roleSelect.disabled = true;
@@ -1761,13 +1890,32 @@ function changePage(tabName, newPage) {
 }
 
 // ==========================================
-// ROLE ACCESS PERMISSIONS MANAGER
+// ROLE ACCESS PERMISSIONS MATRIX ENGINE
 // ==========================================
+const modulesList = [
+  { key: 'services', label: 'Services' },
+  { key: 'projects', label: 'Portfolio Projects' },
+  { key: 'blogs', label: 'Blog Posts' },
+  { key: 'leads', label: 'Inquiry Leads (CRM)' },
+  { key: 'subscriptions', label: 'Subscription Plans' },
+  { key: 'subscriptionRequests', label: 'Subscription Requests' },
+  { key: 'settings', label: 'Global Settings' },
+  { key: 'users', label: 'Administrative Accounts (Users)' }
+];
+
+function isActionNA(moduleName, action) {
+  if (moduleName === 'leads' && action === 'create') return true;
+  if (moduleName === 'subscriptionRequests' && action === 'create') return true;
+  if (moduleName === 'settings' && (action === 'create' || action === 'delete')) return true;
+  return false;
+}
+
 function loadPermissionsManager() {
   const userNameEl = document.getElementById('perm-user-name');
   const userRoleEl = document.getElementById('perm-user-role');
   const userAvatarEl = document.getElementById('perm-user-avatar');
-  const matrixTable = document.getElementById('permissions-matrix-table');
+  const selectorDiv = document.getElementById('superadmin-role-selector');
+  const roleSelect = document.getElementById('select-role-perm');
 
   if (!currentUser) return;
 
@@ -1780,109 +1928,142 @@ function loadPermissionsManager() {
     userAvatarEl.textContent = currentUser.name.charAt(0).toUpperCase();
   }
 
-  if (matrixTable) {
-    const role = currentUser.role;
+  renderPermissionsHistory();
 
-    // Matrix data structure
-    const check = '<span style="color: var(--success-color); font-weight: bold; font-size: 14px;"><i class="fas fa-check-circle"></i> Yes</span>';
-    const cross = '<span style="color: var(--danger-color); font-weight: bold; font-size: 14px;"><i class="fas fa-times-circle"></i> No</span>';
-    const na = '<span style="color: var(--text-muted); font-style: italic; font-size: 13px;">N/A</span>';
-    const selfOnly = '<span style="color: var(--warning-color); font-weight: bold; font-size: 13px;"><i class="fas fa-user-shield"></i> Self Only</span>';
-
-    let services = [check, check, check, check];
-    let projects = [check, check, check, check];
-    let blogs = [check, check, check, check];
-    let leads = [na, check, check, check];
-    let settings = [na, check, check, na];
-    let users = [check, check, check, check];
-
-    if (role === 'admin') {
-      users = [cross, check, selfOnly, cross];
-    } else if (role === 'editor') {
-      services = [check, check, check, cross];
-      projects = [check, check, check, cross];
-      blogs = [check, check, check, cross];
-      leads = [na, check, check, cross];
-      settings = [na, check, check, na];
-      users = [cross, cross, selfOnly, cross];
+  // If super_admin, display the dropdown selector to view/modify other roles
+  if (currentUser.role === 'super_admin') {
+    if (selectorDiv) selectorDiv.style.display = 'block';
+    if (roleSelect) {
+      if (!roleSelect.value) {
+        roleSelect.value = 'admin';
+      }
+      roleSelect.onchange = () => {
+        renderPermissionsMatrix(roleSelect.value);
+      };
+      renderPermissionsMatrix(roleSelect.value);
     }
+  } else {
+    if (selectorDiv) selectorDiv.style.display = 'none';
+    renderPermissionsMatrix(currentUser.role);
+  }
+}
 
-    matrixTable.innerHTML = `
+function renderPermissionsMatrix(targetRole) {
+  const matrixTable = document.getElementById('permissions-matrix-table');
+  if (!matrixTable) return;
+
+  // Find permissions configured for targetRole
+  const perm = permissionsDataList.find(p => p.role === targetRole);
+  if (!perm) {
+    matrixTable.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--danger-color);">No permissions found for role level '${targetRole}'.</td></tr>`;
+    return;
+  }
+
+  const actions = ['create', 'read', 'update', 'delete'];
+
+  matrixTable.innerHTML = modulesList.map(mod => {
+    const cols = actions.map(act => {
+      if (isActionNA(mod.key, act)) {
+        return `<td><span class="badge-na">N/A</span></td>`;
+      }
+
+      const allowed = perm[mod.key] ? perm[mod.key][act] === true : false;
+      const canToggle = currentUser.role === 'super_admin' && targetRole !== 'super_admin';
+
+      if (canToggle) {
+        if (allowed) {
+          return `
+            <td>
+              <span class="badge-toggle yes" onclick="toggleRolePermission('${targetRole}', '${mod.key}', '${act}', false)">
+                <i class="fas fa-check-circle"></i> Yes
+              </span>
+            </td>
+          `;
+        } else {
+          return `
+            <td>
+              <span class="badge-toggle no" onclick="toggleRolePermission('${targetRole}', '${mod.key}', '${act}', true)">
+                <i class="fas fa-times-circle"></i> No
+              </span>
+            </td>
+          `;
+        }
+      } else {
+        if (allowed) {
+          return `
+            <td>
+              <span class="badge-toggle disabled yes">
+                <i class="fas fa-check-circle"></i> Yes
+              </span>
+            </td>
+          `;
+        } else {
+          return `
+            <td>
+              <span class="badge-toggle disabled no">
+                <i class="fas fa-times-circle"></i> No
+              </span>
+            </td>
+          `;
+        }
+      }
+    }).join('');
+
+    return `
       <tr>
-        <td><strong>Services</strong></td>
-        <td>${services[0]}</td>
-        <td>${services[1]}</td>
-        <td>${services[2]}</td>
-        <td>${services[3]}</td>
+        <td><strong>${mod.label}</strong></td>
+        ${cols}
       </tr>
+    `;
+  }).join('');
+}
+
+async function toggleRolePermission(role, moduleName, action, value) {
+  try {
+    const response = await API.updatePermission(role, moduleName, action, value);
+    if (response.success) {
+      // Sync local dynamic permissions cache list
+      const res = await API.getPermissions();
+      if (res.success && res.data) {
+        permissionsDataList = res.data;
+      }
+      renderPermissionsMatrix(role);
+    }
+  } catch (err) {
+    alert(err.message || 'Failed to update dynamic role permission.');
+  }
+}
+
+function renderPermissionsHistory() {
+  const historyTable = document.getElementById('permissions-history-table');
+  if (!historyTable) return;
+
+  if (currentUser.roleHistory && currentUser.roleHistory.length > 0) {
+    const sortedHistory = [...currentUser.roleHistory].sort((a, b) => new Date(b.fromDate) - new Date(a.fromDate));
+    historyTable.innerHTML = sortedHistory.map(h => {
+      const toDateStr = h.toDate ? formatDateTime(h.toDate) : '<span style="color:var(--success-color);font-weight:600;"><i class="fas fa-toggle-on"></i> Present (Active)</span>';
+      return `
+        <tr>
+          <td><span class="status-badge ${h.role}">${h.role.replace('_', ' ')}</span></td>
+          <td>${formatDateTime(h.fromDate)}</td>
+          <td>${toDateStr}</td>
+          <td><strong>${escapeHTML(h.changedBy)}</strong></td>
+        </tr>
+      `;
+    }).join('');
+  } else {
+    const fromDate = currentUser.roleFromDate || currentUser.createdAt || new Date();
+    historyTable.innerHTML = `
       <tr>
-        <td><strong>Portfolio Projects</strong></td>
-        <td>${projects[0]}</td>
-        <td>${projects[1]}</td>
-        <td>${projects[2]}</td>
-        <td>${projects[3]}</td>
-      </tr>
-      <tr>
-        <td><strong>Blog Posts</strong></td>
-        <td>${blogs[0]}</td>
-        <td>${blogs[1]}</td>
-        <td>${blogs[2]}</td>
-        <td>${blogs[3]}</td>
-      </tr>
-      <tr>
-        <td><strong>Inquiry Leads (CRM)</strong></td>
-        <td>${leads[0]}</td>
-        <td>${leads[1]}</td>
-        <td>${leads[2]}</td>
-        <td>${leads[3]}</td>
-      </tr>
-      <tr>
-        <td><strong>Global Settings</strong></td>
-        <td>${settings[0]}</td>
-        <td>${settings[1]}</td>
-        <td>${settings[2]}</td>
-        <td>${settings[3]}</td>
-      </tr>
-      <tr>
-        <td><strong>Administrative Accounts (Users)</strong></td>
-        <td>${users[0]}</td>
-        <td>${users[1]}</td>
-        <td>${users[2]}</td>
-        <td>${users[3]}</td>
+        <td><span class="status-badge ${currentUser.role}">${currentUser.role.replace('_', ' ')}</span></td>
+        <td>${formatDateTime(fromDate)}</td>
+        <td><span style="color:var(--success-color);font-weight:600;"><i class="fas fa-toggle-on"></i> Present (Active)</span></td>
+        <td><strong>System (Initial Setup)</strong></td>
       </tr>
     `;
   }
-
-  const historyTable = document.getElementById('permissions-history-table');
-  if (historyTable) {
-    if (currentUser.roleHistory && currentUser.roleHistory.length > 0) {
-      // Sort history descending by start date
-      const sortedHistory = [...currentUser.roleHistory].sort((a, b) => new Date(b.fromDate) - new Date(a.fromDate));
-      historyTable.innerHTML = sortedHistory.map(h => {
-        const toDateStr = h.toDate ? formatDateTime(h.toDate) : '<span style="color:var(--success-color);font-weight:600;"><i class="fas fa-toggle-on"></i> Present (Active)</span>';
-        return `
-          <tr>
-            <td><span class="status-badge ${h.role}">${h.role.replace('_', ' ')}</span></td>
-            <td>${formatDateTime(h.fromDate)}</td>
-            <td>${toDateStr}</td>
-            <td><strong>${escapeHTML(h.changedBy)}</strong></td>
-          </tr>
-        `;
-      }).join('');
-    } else {
-      // Fallback for pre-existing or seeded users without history entries
-      const fromDate = currentUser.roleFromDate || currentUser.createdAt || new Date();
-      historyTable.innerHTML = `
-        <tr>
-          <td><span class="status-badge ${currentUser.role}">${currentUser.role.replace('_', ' ')}</span></td>
-          <td>${formatDateTime(fromDate)}</td>
-          <td><span style="color:var(--success-color);font-weight:600;"><i class="fas fa-toggle-on"></i> Present (Active)</span></td>
-          <td><strong>System (Initial Setup)</strong></td>
-        </tr>
-      `;
-    }
-  }
 }
+
 
 // ==========================================
 // DATE FORMATTING HELPERS
@@ -2224,6 +2405,139 @@ function downloadSubRequestsPDF() {
   printWindow.document.close();
 }
 
+// ==========================================
+// EXPORT SYSTEM ACTIVITY LOGS DATA (EXCEL & PDF)
+// ==========================================
+function toggleLogsExportDropdown(event) {
+  event.stopPropagation();
+  const dropdown = document.getElementById('logs-export-dropdown-content');
+  if (dropdown) {
+    const isHidden = dropdown.style.display === 'none' || dropdown.style.display === '';
+    dropdown.style.display = isHidden ? 'block' : 'none';
+  }
+}
+
+function exportLogs(format, event) {
+  if (event) event.preventDefault();
+
+  const dropdown = document.getElementById('logs-export-dropdown-content');
+  if (dropdown) dropdown.style.display = 'none';
+
+  if (!logsData || logsData.length === 0) {
+    alert('No activity log records available to export.');
+    return;
+  }
+
+  if (format === 'excel') {
+    downloadLogsExcel();
+  } else if (format === 'pdf') {
+    downloadLogsPDF();
+  }
+}
+
+function downloadLogsExcel() {
+  const headers = ['Timestamp', 'Module', 'Action', 'Details', 'Performed By', 'Role'];
+  const rows = logsData.map(log => [
+    formatDateTime(log.createdAt),
+    log.module,
+    log.action,
+    log.details.replace(/\r?\n|\r/g, ' '),
+    log.performedBy,
+    log.performedByRole.replace('_', ' ')
+  ]);
+
+  let csvContent = "\uFEFF";
+  csvContent += headers.map(h => `"${h.replace(/"/g, '""')}"`).join(',') + "\r\n";
+
+  rows.forEach(row => {
+    csvContent += row.map(val => `"${val.replace(/"/g, '""')}"`).join(',') + "\r\n";
+  });
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", `SponFin_Activity_Logs_${new Date().toISOString().slice(0, 10)}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function downloadLogsPDF() {
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    alert('Pop-up blocked! Please allow pop-ups to download the PDF report.');
+    return;
+  }
+
+  const rowsHtml = logsData.map(log => `
+    <tr>
+      <td>${formatDateTime(log.createdAt)}</td>
+      <td><strong>${escapeHTML(log.module)}</strong></td>
+      <td>${escapeHTML(log.action)}</td>
+      <td>${escapeHTML(log.details)}</td>
+      <td><strong>${escapeHTML(log.performedBy)}</strong></td>
+      <td style="text-transform: capitalize;">${escapeHTML(log.performedByRole.replace('_', ' '))}</td>
+    </tr>
+  `).join('');
+
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>SponFin Activity Logs Report</title>
+        <style>
+          body { font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; color: #1f2937; line-height: 1.4; }
+          .header-container { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2563eb; padding-bottom: 15px; margin-bottom: 20px; }
+          .title-area h2 { margin: 0; color: #1e3a8a; font-size: 24px; font-weight: 700; }
+          .title-area p { margin: 5px 0 0 0; font-size: 12px; color: #4b5563; }
+          .meta-info { text-align: right; font-size: 11px; color: #6b7280; }
+          table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; }
+          th, td { border: 1px solid #e5e7eb; padding: 10px 12px; text-align: left; vertical-align: middle; }
+          th { background-color: #f3f4f6; font-weight: 600; color: #374151; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; }
+          tr:nth-child(even) { background-color: #f9fafb; }
+          @media print {
+            body { padding: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header-container">
+          <div class="title-area">
+            <h2>SponFin Backoffice Report</h2>
+            <p>System Administration - Activity Logs</p>
+          </div>
+          <div class="meta-info">
+            <div><strong>Generated:</strong> ${formatDateTime(new Date())}</div>
+            <div><strong>Total Records:</strong> ${logsData.length}</div>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 18%;">Timestamp</th>
+              <th style="width: 12%;">Module</th>
+              <th style="width: 10%;">Action</th>
+              <th style="width: 32%;">Details</th>
+              <th style="width: 15%;">Performed By</th>
+              <th style="width: 13%;">Role</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+        <script>
+          window.onload = function() {
+            window.print();
+            setTimeout(function() { window.close(); }, 500);
+          }
+        </script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+}
+
 // Global click handler to close dropdown when clicking outside
 window.addEventListener('click', (e) => {
   const dropdown = document.getElementById('export-dropdown-content');
@@ -2237,6 +2551,12 @@ window.addEventListener('click', (e) => {
   if (subDropdown && subBtn && !subBtn.contains(e.target) && !subDropdown.contains(e.target)) {
     subDropdown.style.display = 'none';
   }
+
+  const logsDropdown = document.getElementById('logs-export-dropdown-content');
+  const logsBtn = document.getElementById('btn-export-logs');
+  if (logsDropdown && logsBtn && !logsBtn.contains(e.target) && !logsDropdown.contains(e.target)) {
+    logsDropdown.style.display = 'none';
+  }
 });
 
 // ==========================================
@@ -2244,7 +2564,7 @@ window.addEventListener('click', (e) => {
 // ==========================================
 let logsData = [];
 
-async function loadLogsManager(fromDate = '', toDate = '') {
+async function loadLogsManager(fromDate = '', toDate = '', module = '', action = '') {
   if (!currentUser || currentUser.role !== 'super_admin') {
     return; // Safety guard
   }
@@ -2257,25 +2577,37 @@ async function loadLogsManager(fromDate = '', toDate = '') {
   // Update input fields
   const fromDateInput = document.getElementById('filter-logs-from');
   const toDateInput = document.getElementById('filter-logs-to');
+  const moduleSelect = document.getElementById('filter-logs-module');
+  const actionSelect = document.getElementById('filter-logs-action');
+
   if (fromDateInput) fromDateInput.value = fromDate;
   if (toDateInput) toDateInput.value = toDate;
+  if (moduleSelect) moduleSelect.value = module;
+  if (actionSelect) actionSelect.value = action;
 
   // Update explanation label
   const infoMsgEl = document.getElementById('logs-info-msg');
   if (infoMsgEl) {
-    if (fromDate && toDate) {
-      infoMsgEl.textContent = `Showing logs from ${fromDate} to ${toDate}.`;
-    } else if (fromDate) {
-      infoMsgEl.textContent = `Showing logs since ${fromDate}.`;
-    } else if (toDate) {
-      infoMsgEl.textContent = `Showing logs until ${toDate}.`;
+    let filterTexts = [];
+    if (fromDate && toDate) filterTexts.push(`from ${fromDate} to ${toDate}`);
+    else if (fromDate) filterTexts.push(`since ${fromDate}`);
+    else if (toDate) filterTexts.push(`until ${toDate}`);
+    
+    if (module) {
+      const optionEl = moduleSelect ? moduleSelect.querySelector(`option[value="${module}"]`) : null;
+      filterTexts.push(`module: "${optionEl ? optionEl.textContent : module}"`);
+    }
+    if (action) filterTexts.push(`action: "${action}"`);
+
+    if (filterTexts.length > 0) {
+      infoMsgEl.textContent = `Showing filtered logs (${filterTexts.join(', ')}).`;
     } else {
       infoMsgEl.textContent = 'Showing last 100 logs by default.';
     }
   }
 
   try {
-    const response = await API.getActivityLogs(fromDate, toDate);
+    const response = await API.getActivityLogs(fromDate, toDate, module, action);
     if (response.success) {
       logsData = response.data;
       pageLogs = 1; // Reset to page 1
@@ -2293,14 +2625,16 @@ async function loadLogsManager(fromDate = '', toDate = '') {
     filterBtn.onclick = () => {
       const fromVal = fromDateInput ? fromDateInput.value : '';
       const toVal = toDateInput ? toDateInput.value : '';
-      loadLogsManager(fromVal, toVal);
+      const moduleVal = moduleSelect ? moduleSelect.value : '';
+      const actionVal = actionSelect ? actionSelect.value : '';
+      loadLogsManager(fromVal, toVal, moduleVal, actionVal);
     };
   }
 
   const resetBtn = document.getElementById('btn-reset-logs');
   if (resetBtn) {
     resetBtn.onclick = () => {
-      loadLogsManager('', '');
+      loadLogsManager('', '', '', '');
     };
   }
 }
@@ -2390,8 +2724,9 @@ function renderSubscriptionRequestsTable() {
 
   tableBody.innerHTML = paginatedData.map(r => {
     const isActive = r._id === activeSubscriptionRequestId;
-    const showDelete = currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'admin');
+    const showDelete = hasRolePermission('subscriptionRequests', 'delete');
     const deleteBtn = showDelete ? `<button class="btn-admin btn-admin-danger btn-admin-sm" onclick="deleteSubscriptionRequest('${r._id}')">Delete</button>` : '';
+    const canUpdateStatus = hasRolePermission('subscriptionRequests', 'update');
     
     return `
       <tr class="${isActive ? 'active-row' : ''}">
@@ -2403,7 +2738,7 @@ function renderSubscriptionRequestsTable() {
         <td>${escapeHTML(r.company || 'N/A')}</td>
         <td><span class="status-badge admin">${escapeHTML(r.plan)}</span></td>
         <td>
-          <select data-prev="${r.status}" onchange="handleSubscriptionRequestStatusSelectChange('${r._id}', this)" style="padding: 4px; border: 1px solid var(--border-color); border-radius: 4px; font-size:12px; display: block; margin-bottom: 2px;" ${r.status === 'closed' ? 'disabled' : ''}>
+          <select data-prev="${r.status}" onchange="handleSubscriptionRequestStatusSelectChange('${r._id}', this)" style="padding: 4px; border: 1px solid var(--border-color); border-radius: 4px; font-size:12px; display: block; margin-bottom: 2px;" ${(r.status === 'closed' || !canUpdateStatus) ? 'disabled' : ''}>
             <option value="new" ${r.status === 'new' ? 'selected' : ''}>New</option>
             <option value="contacted" ${r.status === 'contacted' ? 'selected' : ''}>Contacted</option>
             <option value="closed" ${r.status === 'closed' ? 'selected' : ''}>Closed</option>

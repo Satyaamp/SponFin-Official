@@ -55,4 +55,43 @@ const checkRole = (roles) => {
   };
 };
 
-module.exports = { verifyToken, checkRole };
+const Permission = require('../models/Permission');
+
+// Middleware to check dynamic database-stored role permissions
+const checkPermission = (moduleName, action) => {
+  return async (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'Not authorized' });
+    }
+
+    // Super Admin has all rights by default
+    if (req.user.role === 'super_admin') {
+      return next();
+    }
+
+    try {
+      const perm = await Permission.findOne({ role: req.user.role });
+      if (!perm) {
+        return res.status(403).json({ 
+          success: false, 
+          message: `Access denied: No permissions configured for role '${req.user.role}'` 
+        });
+      }
+
+      const modulePermissions = perm[moduleName];
+      if (modulePermissions && modulePermissions[action] === true) {
+        return next();
+      }
+
+      return res.status(403).json({ 
+        success: false, 
+        message: `Access denied: You do not have permission to ${action} ${moduleName}` 
+      });
+    } catch (err) {
+      console.error('Permission check error:', err);
+      return res.status(500).json({ success: false, message: 'Server error checking permissions' });
+    }
+  };
+};
+
+module.exports = { verifyToken, checkRole, checkPermission };

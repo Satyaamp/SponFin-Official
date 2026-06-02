@@ -6,14 +6,14 @@ const {
   updateLead,
   deleteLead
 } = require('../controllers/leadController');
-const { verifyToken, checkRole } = require('../middleware/authMiddleware');
+const { verifyToken, checkPermission } = require('../middleware/authMiddleware');
 
 router.route('/')
   .post(createLead)
-  .get(verifyToken, checkRole(['super_admin', 'admin', 'editor']), getLeads);
+  .get(verifyToken, checkPermission('leads', 'read'), getLeads);
 
 router.route('/:id')
-  .put(verifyToken, checkRole(['super_admin', 'admin', 'editor']), updateLead)
-  .delete(verifyToken, checkRole(['super_admin', 'admin']), deleteLead);
+  .put(verifyToken, checkPermission('leads', 'update'), updateLead)
+  .delete(verifyToken, checkPermission('leads', 'delete'), deleteLead);
 
 module.exports = router;

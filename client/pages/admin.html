@@ -628,9 +628,25 @@
             </div>
           </div>
 
-          <h3 style="margin-top: 32px;">Access Control Matrix</h3>
-          <p style="color: var(--text-muted); margin-bottom: 16px;">Below are the permissions allowed for your role on
-            the system.</p>
+          <div id="superadmin-role-selector" style="display: none; background: #f3f4f6; border: 1px solid var(--border-color); border-radius: 6px; padding: 16px; margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+              <div>
+                <h4 style="font-size: 14px; font-weight: 700; color: var(--text-dark); margin-bottom: 4px;"><i class="fas fa-user-shield" style="color: var(--primary-color); margin-right: 6px;"></i> Role Access Control (ACL)</h4>
+                <p style="font-size: 12px; color: var(--text-muted); margin: 0;">Configure dynamic system capabilities for other administrative roles below.</p>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <label for="select-role-perm" style="font-weight: 600; font-size: 13px; color: var(--text-dark);">Configure Role:</label>
+                <select id="select-role-perm" style="padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 13px; outline: none; background: #ffffff;">
+                  <option value="admin">Admin</option>
+                  <option value="editor">Editor</option>
+                  <option value="super_admin">Super Admin (Read-Only)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <h3 id="permissions-matrix-title" style="margin-top: 32px;">Access Control Matrix</h3>
+          <p id="permissions-matrix-desc" style="color: var(--text-muted); margin-bottom: 16px;">Below are the permissions allowed for your role on the system.</p>
           <div class="table-wrapper" style="margin-bottom: 0;">
             <table class="admin-table">
               <thead>
@@ -673,6 +689,21 @@
       <div class="tab-panel" id="panel-logs">
         <div class="panel-header">
           <h2>System Activity Logs</h2>
+          <div style="position: relative; display: inline-block;">
+            <button class="btn-admin btn-admin-primary" id="btn-export-logs" onclick="toggleLogsExportDropdown(event)">
+              <i class="fas fa-download"></i> Export Logs <i class="fas fa-chevron-down"
+                style="font-size: 10px; margin-left: 4px;"></i>
+            </button>
+            <div id="logs-export-dropdown-content"
+              style="display: none; position: absolute; right: 0; background-color: #ffffff; min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.15); border: 1px solid var(--border-color); border-radius: 4px; z-index: 50; margin-top: 4px;">
+              <a href="#" onclick="exportLogs('excel', event)"
+                style="color: var(--text-main); padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; border-bottom: 1px solid #f3f4f6; cursor: pointer;"><i
+                  class="fas fa-file-excel" style="color: #107c41; margin-right: 8px;"></i> Export to Excel</a>
+              <a href="#" onclick="exportLogs('pdf', event)"
+                style="color: var(--text-main); padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; cursor: pointer;"><i
+                  class="fas fa-file-pdf" style="color: #e81123; margin-right: 8px;"></i> Export to PDF</a>
+            </div>
+          </div>
         </div>
         <div class="table-controls" style="border-top-left-radius: 6px; border-top-right-radius: 6px;">
           <div class="search-filter">
@@ -683,6 +714,30 @@
             <div class="filter-group">
               <label for="filter-logs-to">To:</label>
               <input type="date" id="filter-logs-to">
+            </div>
+            <div class="filter-group">
+              <label for="filter-logs-module">Module:</label>
+              <select id="filter-logs-module" style="padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 13px; background: #ffffff;">
+                <option value="">All Modules</option>
+                <option value="service">Services</option>
+                <option value="project">Portfolio Projects</option>
+                <option value="blog">Blog Posts</option>
+                <option value="lead">Inquiry Leads (CRM)</option>
+                <option value="subscription">Subscription Plans</option>
+                <option value="subscription_request">Subscription Requests</option>
+                <option value="settings">Global Settings</option>
+                <option value="user">Administrative Accounts (Users)</option>
+                <option value="permissions">Role Access / Permissions</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="filter-logs-action">Action:</label>
+              <select id="filter-logs-action" style="padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 13px; background: #ffffff;">
+                <option value="">All Actions</option>
+                <option value="Create">Create</option>
+                <option value="Update">Update</option>
+                <option value="Delete">Delete</option>
+              </select>
             </div>
             <div class="filter-actions">
               <button class="btn-admin btn-admin-primary btn-admin-sm" id="btn-filter-logs">Fetch Logs</button>

@@ -257,10 +257,12 @@ const API = {
   },
 
   // Activity Logs
-  async getActivityLogs(fromDate = '', toDate = '') {
+  async getActivityLogs(fromDate = '', toDate = '', module = '', action = '') {
     const params = new URLSearchParams();
     if (fromDate) params.append('fromDate', fromDate);
     if (toDate) params.append('toDate', toDate);
+    if (module) params.append('module', module);
+    if (action) params.append('action', action);
     const queryString = params.toString();
     const query = queryString ? `?${queryString}` : '';
     return await this.request(`/logs${query}`);
@@ -317,6 +319,18 @@ const API = {
   async deleteSubscriptionRequest(id) {
     return await this.request(`/subscription-requests/${id}`, {
       method: 'DELETE'
+    });
+  },
+
+  // Permissions management
+  async getPermissions() {
+    return await this.request('/permissions');
+  },
+
+  async updatePermission(role, moduleName, action, value) {
+    return await this.request(`/permissions/${role}`, {
+      method: 'PUT',
+      body: JSON.stringify({ moduleName, action, value })
     });
   }
 };

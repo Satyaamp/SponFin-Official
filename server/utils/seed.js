@@ -257,7 +257,52 @@ const seedData = async () => {
       ]);
       console.log('Subscription plans seeded successfully.');
     } else {
-      console.log('Subscription plans already exist. Skipping plans seed.');
+      console.log('Subscription plans already exist. Skipping subscription plans seed.');
+    }
+
+    // 7. Seed Default Permissions
+    const Permission = require('../models/Permission');
+    const permissionCount = await Permission.countDocuments();
+    if (permissionCount === 0) {
+      console.log('Seeding initial role permissions...');
+      await Permission.create([
+        {
+          role: 'super_admin',
+          services: { create: true, read: true, update: true, delete: true },
+          projects: { create: true, read: true, update: true, delete: true },
+          blogs: { create: true, read: true, update: true, delete: true },
+          leads: { create: false, read: true, update: true, delete: true },
+          subscriptionRequests: { create: false, read: true, update: true, delete: true },
+          subscriptions: { create: true, read: true, update: true, delete: true },
+          settings: { create: false, read: true, update: true, delete: false },
+          users: { create: true, read: true, update: true, delete: true }
+        },
+        {
+          role: 'admin',
+          services: { create: true, read: true, update: true, delete: true },
+          projects: { create: true, read: true, update: true, delete: true },
+          blogs: { create: true, read: true, update: true, delete: true },
+          leads: { create: false, read: true, update: true, delete: true },
+          subscriptionRequests: { create: false, read: true, update: true, delete: true },
+          subscriptions: { create: true, read: true, update: true, delete: true },
+          settings: { create: false, read: true, update: true, delete: false },
+          users: { create: false, read: true, update: true, delete: false }
+        },
+        {
+          role: 'editor',
+          services: { create: true, read: true, update: true, delete: false },
+          projects: { create: true, read: true, update: true, delete: false },
+          blogs: { create: true, read: true, update: true, delete: false },
+          leads: { create: false, read: true, update: true, delete: false },
+          subscriptionRequests: { create: false, read: true, update: true, delete: false },
+          subscriptions: { create: true, read: true, update: true, delete: false },
+          settings: { create: false, read: true, update: true, delete: false },
+          users: { create: false, read: false, update: true, delete: false }
+        }
+      ]);
+      console.log('Role permissions seeded successfully.');
+    } else {
+      console.log('Role permissions already exist. Skipping permissions seed.');
     }
 
     console.log('Database seeding completed successfully.');

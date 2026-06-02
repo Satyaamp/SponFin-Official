@@ -337,7 +337,8 @@ body {
   white-space: nowrap;
 }
 
-.search-filter .filter-group input {
+.search-filter .filter-group input,
+.search-filter .filter-group select {
   padding: 6px 12px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
@@ -805,3 +806,73 @@ table.admin-table tr.active-row {
     justify-content: center;
   }
 }
+
+/* ==========================================
+ROLE ACCESS PERMISSIONS BADGES
+========================================== */
+.badge-toggle {
+  cursor: pointer;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  border: 1px solid transparent;
+}
+
+.badge-toggle.yes {
+  background-color: rgba(5, 150, 105, 0.1);
+  color: var(--success-color);
+  border-color: rgba(5, 150, 105, 0.2);
+}
+
+.badge-toggle.yes:hover {
+  background-color: rgba(5, 150, 105, 0.2);
+  border-color: rgba(5, 150, 105, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.1);
+}
+
+.badge-toggle.no {
+  background-color: rgba(220, 38, 38, 0.1);
+  color: var(--danger-color);
+  border-color: rgba(220, 38, 38, 0.2);
+}
+
+.badge-toggle.no:hover {
+  background-color: rgba(220, 38, 38, 0.2);
+  border-color: rgba(220, 38, 38, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.1);
+}
+
+.badge-toggle.disabled {
+  cursor: default;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.badge-toggle.disabled.yes {
+  background-color: rgba(5, 150, 105, 0.05);
+  color: rgba(5, 150, 105, 0.5);
+  border-color: rgba(5, 150, 105, 0.1);
+}
+
+.badge-toggle.disabled.no {
+  background-color: rgba(220, 38, 38, 0.05);
+  color: rgba(220, 38, 38, 0.5);
+  border-color: rgba(220, 38, 38, 0.1);
+}
+
+.badge-na {
+  color: #9ca3af;
+  font-style: italic;
+  font-size: 13px;
+  user-select: none;
+  font-weight: 500;
+}
+

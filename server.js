@@ -38,6 +38,7 @@ app.use('/api/users', require('./server/routes/userRoutes'));
 app.use('/api/logs', require('./server/routes/logRoutes'));
 app.use('/api/subscriptions', require('./server/routes/subscriptionRoutes'));
 app.use('/api/subscription-requests', require('./server/routes/subscriptionRequestRoutes'));
+app.use('/api/permissions', require('./server/routes/permissionRoutes'));
 
 // Frontend Page Routes (with server-side SEO HTML injection)
 app.get('/', async (req, res, next) => {

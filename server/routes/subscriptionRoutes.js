@@ -7,15 +7,15 @@ const {
   updateSubscription,
   deleteSubscription
 } = require('../controllers/subscriptionController');
-const { verifyToken, checkRole } = require('../middleware/authMiddleware');
+const { verifyToken, checkPermission } = require('../middleware/authMiddleware');
 
 router.route('/')
   .get(getSubscriptions)
-  .post(verifyToken, checkRole(['super_admin', 'admin', 'editor']), createSubscription);
+  .post(verifyToken, checkPermission('subscriptions', 'create'), createSubscription);
 
 router.route('/:id')
   .get(getSubscription)
-  .put(verifyToken, checkRole(['super_admin', 'admin', 'editor']), updateSubscription)
-  .delete(verifyToken, checkRole(['super_admin', 'admin']), deleteSubscription);
+  .put(verifyToken, checkPermission('subscriptions', 'update'), updateSubscription)
+  .delete(verifyToken, checkPermission('subscriptions', 'delete'), deleteSubscription);
 
 module.exports = router;

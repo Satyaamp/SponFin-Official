@@ -8,7 +8,7 @@ const { verifyToken, checkRole } = require('../middleware/authMiddleware');
 // @access  Private (SuperAdmin only)
 router.get('/', verifyToken, checkRole(['super_admin']), async (req, res, next) => {
   try {
-    const { fromDate, toDate } = req.query;
+    const { fromDate, toDate, module, action } = req.query;
     const query = {};
     let limitValue = 100; // default limit to avoid loading too many logs
     
@@ -24,6 +24,16 @@ router.get('/', verifyToken, checkRole(['super_admin']), async (req, res, next) 
         query.createdAt.$lte = endOfDay;
         limitValue = 0;
       }
+    }
+
+    if (module) {
+      query.module = module;
+      limitValue = 0;
+    }
+
+    if (action) {
+      query.action = action;
+      limitValue = 0;
     }
 
     const logs = await ActivityLog.find(query).sort({ createdAt: -1 }).limit(limitValue);
